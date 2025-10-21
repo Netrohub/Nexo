@@ -89,6 +89,12 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
   
+  /* Arabic font support */
+  [lang="ar"],
+  [dir="rtl"] {
+    font-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  
   /* RTL Support with Emoji Handling */
   [dir="rtl"] {
     direction: rtl;
@@ -105,6 +111,28 @@
     display: inline-block;
     direction: ltr;
     unicode-bidi: embed;
+  }
+  
+  /* RTL-specific layout fixes */
+  [dir="rtl"] .glass-card,
+  [dir="rtl"] .btn-glow,
+  [dir="rtl"] .card-hover {
+    text-align: right;
+  }
+  
+  /* Flip icons in RTL */
+  [dir="rtl"] .lucide {
+    transform: scaleX(-1);
+  }
+  
+  /* Keep certain icons unflipped */
+  [dir="rtl"] .lucide-shopping-cart,
+  [dir="rtl"] .lucide-star,
+  [dir="rtl"] .lucide-heart,
+  [dir="rtl"] .lucide-search,
+  [dir="rtl"] .lucide-globe,
+  [dir="rtl"] .lucide-user {
+    transform: scaleX(1);
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -259,5 +287,39 @@
   .badge-glow {
     background: var(--gradient-primary);
     box-shadow: 0 4px 12px hsl(258 90% 66% / 0.4);
+  }
+  
+  /* Respect user's motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    
+    .float-animation,
+    .twinkle-animation {
+      animation: none;
+    }
+  }
+  
+  /* Performance optimizations */
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .will-change-opacity {
+    will-change: opacity;
+  }
+  
+  /* GPU acceleration for smoother animations */
+  .glass-card,
+  .btn-glow,
+  .card-hover {
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 }

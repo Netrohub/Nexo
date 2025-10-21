@@ -1,12 +1,45 @@
-import { Search, ShoppingCart, User, Menu } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { analytics } from "@/lib/analytics";
 
 const Navbar = () => {
   const { t } = useLanguage();
+  const { isAuthenticated, user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    console.log('🚪 Logging out...');
+    
+    const loadingToast = toast.loading('🚪 Signing out...');
+    
+    try {
+      await logout();
+      
+      toast.dismiss(loadingToast);
+      toast.success('👋 Logged out successfully!', {
+        description: 'See you next time!',
+        duration: 2000,
+      });
+      
+      analytics.customEvent('logout');
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Logout failed');
+    }
+  };
   
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/50 glass-card">
@@ -62,19 +95,83 @@ const Navbar = () => {
 
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
-            <Button asChild variant="ghost" size="icon" className="hidden md:flex hover:bg-primary/10 hover:text-primary transition-colors">
-              <Link to="/account/dashboard">
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" size="icon" className="relative hover:bg-primary/10 hover:text-primary transition-colors">
-              <Link to="/cart">
-                <ShoppingCart className="h-5 w-5" />
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full gradient-primary text-[10px] font-bold text-primary-foreground shadow-lg">
-                  3
-                </span>
-              </Link>
-            </Button>
+            
+            {isAuthenticated ? (
+              <>
+                <Button asChild variant="ghost" size="icon" className="relative hover:bg-primary/10 hover:text-primary transition-colors">
+                  <Link to="/cart">
+                    <ShoppingCart className="h-5 w-5" />
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full gradient-primary text-[10px] font-bold text-primary-foreground shadow-lg">
+                      3
+                    </span>
+                  </Link>
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user?.avatar || ""} alt={user?.name || ""} />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {user?.name?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 glass-card border-border/50" align="end" forceMount>
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="flex flex-col space-y-1 leading-none">
+                        <p className="font-medium">{user?.name}</p>
+                        <p className="w-[200px] truncate text-sm text-muted-foreground">
+                          {user?.email}
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/account/dashboard" className="cursor-pointer">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>{t('myAccount')}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    {user?.roles?.includes('seller') && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/seller/dashboard" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>{t('sellerDashboard')}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {user?.roles?.includes('admin') && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/disputes" className="cursor-pointer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Admin Panel</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>{t('logout')}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/login">{t('login')}</Link>
+                </Button>
+                <Button asChild size="sm">
+                  <Link to="/register">{t('register')}</Link>
+                </Button>
+              </>
+            )}
+            
             <Button variant="ghost" size="icon" className="md:hidden hover:bg-primary/10 hover:text-primary transition-colors">
               <Menu className="h-5 w-5" />
             </Button>

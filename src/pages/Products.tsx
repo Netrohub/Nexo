@@ -12,7 +12,8 @@ import {
   SlidersHorizontal,
   Grid3x3,
   List,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import {
   Select,
@@ -22,6 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useProducts } from "@/hooks/useApi";
+import { ProductFilters } from "@/lib/api";
 
 const products = [
   {
@@ -140,63 +143,65 @@ const Products = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState("all-prices");
   const [sortBy, setSortBy] = useState("featured");
 
-  const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...products];
+  const [currentPage, setCurrentPage] = useState(1);
 
-    // Search filter
+  // Build filters for API
+  const filters: ProductFilters = useMemo(() => {
+    const apiFilters: ProductFilters = {
+      page: currentPage,
+      per_page: 12,
+    };
+
     if (searchQuery) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      apiFilters.search = searchQuery;
     }
 
-    // Category filter
     if (selectedCategory !== "all-products") {
-      const categoryName = categories.find(cat => 
-        cat.toLowerCase().replace(" ", "-") === selectedCategory
-      );
-      if (categoryName) {
-        filtered = filtered.filter(product => product.category === categoryName);
+      apiFilters.category = selectedCategory;
+    }
+
+    if (selectedPriceRange !== "all-prices") {
+      switch (selectedPriceRange) {
+        case "under-$100":
+          apiFilters.max_price = 100;
+          break;
+        case "$100---$300":
+          apiFilters.min_price = 100;
+          apiFilters.max_price = 300;
+          break;
+        case "$300---$500":
+          apiFilters.min_price = 300;
+          apiFilters.max_price = 500;
+          break;
+        case "over-$500":
+          apiFilters.min_price = 500;
+          break;
       }
     }
 
-    // Price filter
-    if (selectedPriceRange !== "all-prices") {
-      filtered = filtered.filter(product => {
-        switch (selectedPriceRange) {
-          case "under-$100":
-            return product.price < 100;
-          case "$100---$300":
-            return product.price >= 100 && product.price <= 300;
-          case "$300---$500":
-            return product.price >= 300 && product.price <= 500;
-          case "over-$500":
-            return product.price > 500;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Sort
+    // Map sort options to API format
     switch (sortBy) {
       case "price-low":
-        filtered.sort((a, b) => a.price - b.price);
+        apiFilters.sort = "price_asc";
         break;
       case "price-high":
-        filtered.sort((a, b) => b.price - a.price);
+        apiFilters.sort = "price_desc";
         break;
       case "rating":
-        filtered.sort((a, b) => b.rating - a.rating);
+        apiFilters.sort = "rating";
         break;
-      case "featured":
-        filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+      case "newest":
+        apiFilters.sort = "newest";
+        break;
+      default:
+        apiFilters.featured = true;
         break;
     }
 
-    return filtered;
-  }, [searchQuery, selectedCategory, selectedPriceRange, sortBy]);
+    return apiFilters;
+  }, [searchQuery, selectedCategory, selectedPriceRange, sortBy, currentPage]);
+
+  const { data: productsData, isLoading, error } = useProducts(filters);
 
   const clearFilter = (filterType: string) => {
     if (filterType === "category") setSelectedCategory("all-products");
@@ -336,15 +341,42 @@ const Products = () => {
             {/* Results Count */}
             <div className="mb-6 flex items-center justify-between">
               <p className="text-foreground/60">
-                {t('showing')} <span className="text-foreground font-semibold">{filteredAndSortedProducts.length}</span> {t('productsText')}
+                {isLoading ? (
+                  <span>Loading...</span>
+                ) : productsData ? (
+                  <>
+                    {t('showing')} <span className="text-foreground font-semibold">{productsData.data.length}</span> {t('of')} <span className="text-foreground font-semibold">{productsData.meta.total}</span> {t('productsText')}
+                  </>
+                ) : (
+                  <span>No products found</span>
+                )}
               </p>
             </div>
 
             {/* Products Grid */}
-            {filteredAndSortedProducts.length > 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-destructive text-lg">Failed to load products</p>
+                <p className="text-foreground/60 mt-2">Please try again later</p>
+              </div>
+            ) : productsData && productsData.data.length > 0 ? (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredAndSortedProducts.map((product) => (
-                  <ProductCard key={product.id} {...product} />
+                {productsData.data.map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    id={product.id}
+                    name={product.title}
+                    price={product.price}
+                    image={product.images[0] || "/placeholder.svg"}
+                    category={product.category}
+                    rating={product.rating}
+                    reviews={product.reviews_count}
+                    featured={product.featured}
+                  />
                 ))}
               </div>
             ) : (
@@ -354,12 +386,18 @@ const Products = () => {
             )}
 
             {/* Load More */}
-            <div className="mt-12 text-center">
-              <Button size="lg" className="btn-glow">
-                {t('loadMore')}
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
+            {productsData && productsData.meta.last_page > currentPage && (
+              <div className="mt-12 text-center">
+                <Button 
+                  size="lg" 
+                  className="btn-glow"
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                >
+                  {t('loadMore')}
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            )}
           </div>
         </section>
       </main>

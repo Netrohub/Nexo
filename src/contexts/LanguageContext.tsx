@@ -22,7 +22,7 @@ const translations = {
     help: "Help Center",
 
     // Hero
-    welcomeMessage: "Welcome to Nexo Marketplace",
+    welcomeMessage: "Welcome to Nexo Platform",
     heroTitle: "Your Digital Gaming Marketplace",
     heroDescription:
       "Buy and sell game accounts, social media profiles, and digital products in a secure, trusted marketplace powered by cutting-edge technology.",
@@ -409,7 +409,7 @@ const translations = {
     help: "مركز المساعدة ❓",
 
     // Hero
-    welcomeMessage: "مرحبًا بك في سوق Nexo 🛍️",
+    welcomeMessage: "مرحبًا بك في منصة Nexo 🛍️",
     heroTitle: "سوقك الرقمي لعالم الألعاب 🎮",
     heroDescription:
       "اشترِ وبِع حسابات الألعاب، وحسابات التواصل الاجتماعي، والمنتجات الرقمية بكل أمان وموثوقية ضمن سوق يعتمد أحدث التقنيات 🔒⚙️",

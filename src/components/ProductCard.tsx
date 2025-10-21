@@ -4,9 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Star } from "lucide-react";
 import { getCategoryImage } from "@/lib/categoryImages";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePrefetch } from "@/hooks/usePrefetch";
+import { Link } from "react-router-dom";
 
 interface ProductCardProps {
-  id: string;
+  id: string | number;
   name: string;
   price: number;
   image: string;
@@ -16,13 +18,23 @@ interface ProductCardProps {
   featured?: boolean;
 }
 
-const ProductCard = ({ name, price, image, category, rating, reviews, featured }: ProductCardProps) => {
+const ProductCard = ({ id, name, price, image, category, rating, reviews, featured }: ProductCardProps) => {
   const { t } = useLanguage();
+  const { prefetchProduct } = usePrefetch();
+  
   // Use category-based image instead of product-specific image
   const displayImage = getCategoryImage(category, image);
   
+  // Prefetch product data on hover
+  const handleMouseEnter = () => {
+    if (typeof id === 'number') {
+      prefetchProduct(id);
+    }
+  };
+  
   return (
-    <Card className="glass-card overflow-hidden group">
+    <Link to={`/products/${id}`} onMouseEnter={handleMouseEnter}>
+      <Card className="glass-card overflow-hidden group cursor-pointer">
       <CardContent className="p-0">
         <div className="relative aspect-square overflow-hidden bg-muted/30">
           <img
@@ -63,6 +75,7 @@ const ProductCard = ({ name, price, image, category, rating, reviews, featured }
         </Button>
       </CardFooter>
     </Card>
+    </Link>
   );
 };
 

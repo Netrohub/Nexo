@@ -1,17 +1,118 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Starfield from "@/components/Starfield";
+import TurnstileWidget, { TurnstileWidgetRef } from "@/components/TurnstileWidget";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link } from "react-router-dom";
-import { Mail, Lock, ArrowRight, Smartphone } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Mail, Lock, ArrowRight, Smartphone, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useRef, useState } from "react";
+import { analytics } from "@/lib/analytics";
+import { toast } from "sonner";
+
+// Form validation schema
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  remember: z.boolean().optional(),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isLoading } = useAuth();
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const isTurnstileEnabled = import.meta.env.VITE_ENABLE_TURNSTILE === 'true';
+
+  const from = location.state?.from?.pathname || "/";
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      remember: false,
+    },
+  });
+
+  const rememberMe = watch('remember');
+
+  const handleTurnstileSuccess = (token: string) => {
+    setTurnstileToken(token);
+  };
+
+  const handleTurnstileError = () => {
+    setTurnstileToken("");
+  };
+
+  const onSubmit = async (data: LoginFormData) => {
+    console.log('🔐 Login form submitted', { email: data.email });
+    
+    // Check Turnstile validation if enabled (skip in mock mode)
+    const isMockMode = import.meta.env.VITE_MOCK_API === 'true';
+    if (isTurnstileEnabled && !turnstileToken && !isMockMode) {
+      console.warn('⚠️ Turnstile validation required but token missing');
+      toast.error('⚠️ Please complete the security verification');
+      return;
+    }
+
+    try {
+      console.log('📡 Calling login API...');
+      
+      // Show loading toast
+      const loadingToast = toast.loading('🔐 Signing in...');
+      
+      await login(data.email, data.password, data.remember);
+      
+      console.log('✅ Login successful! User is now authenticated.');
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
+      
+      // Show success with animation
+      toast.success('✅ Welcome back!', {
+        description: `Logged in as ${data.email}`,
+        duration: 2000,
+      });
+      
+      // Track successful login
+      analytics.login('email');
+      
+      // Small delay for user to see success message
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 500);
+      
+    } catch (error: any) {
+      console.error('❌ Login failed:', error);
+      toast.error('❌ Login failed', {
+        description: error?.message || 'Please check your credentials and try again.',
+        duration: 4000,
+      });
+      
+      // Reset Turnstile on error
+      if (isTurnstileEnabled) {
+        turnstileRef.current?.reset();
+        setTurnstileToken("");
+      }
+    }
+  };
   
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -36,7 +137,13 @@ const Login = () => {
               </div>
 
               {/* Login Form */}
-              <form className="space-y-5">
+              <form 
+                onSubmit={(e) => {
+                  console.log('📋 Form onSubmit triggered');
+                  handleSubmit(onSubmit)(e);
+                }} 
+                className="space-y-5"
+              >
                 {/* Email */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-foreground">
@@ -49,8 +156,12 @@ const Login = () => {
                       type="email"
                       placeholder="your@email.com"
                       className="pl-10 glass-card border-border/50 focus:border-primary/50"
+                      {...register("email")}
                     />
                   </div>
+                  {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email.message}</p>
+                  )}
                 </div>
 
                 {/* Password */}
@@ -65,14 +176,22 @@ const Login = () => {
                       type="password"
                       placeholder="••••••••"
                       className="pl-10 glass-card border-border/50 focus:border-primary/50"
+                      {...register("password")}
                     />
                   </div>
+                  {errors.password && (
+                    <p className="text-sm text-destructive">{errors.password.message}</p>
+                  )}
                 </div>
 
                 {/* Remember & Forgot */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="remember" />
+                    <Checkbox 
+                      id="remember"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setValue('remember', checked as boolean)}
+                    />
                     <label
                       htmlFor="remember"
                       className="text-sm text-foreground/70 cursor-pointer"
@@ -88,17 +207,33 @@ const Login = () => {
                   </Link>
                 </div>
 
-                {/* Turnstile CAPTCHA Placeholder */}
-                <div className="p-4 glass-card border border-border/50 rounded-lg text-center">
-                  <p className="text-sm text-foreground/60">
-                    🔒 Cloudflare Turnstile CAPTCHA
-                  </p>
-                </div>
+                {/* Cloudflare Turnstile CAPTCHA */}
+                <TurnstileWidget
+                  ref={turnstileRef}
+                  onSuccess={handleTurnstileSuccess}
+                  onError={handleTurnstileError}
+                  onExpire={handleTurnstileError}
+                />
 
                 {/* Submit Button */}
-                <Button type="submit" className="w-full btn-glow" size="lg">
-                  {t('signIn')}
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                <Button 
+                  type="submit" 
+                  className="w-full btn-glow" 
+                  size="lg"
+                  disabled={isLoading}
+                  onClick={() => console.log('🖱️ Sign in button clicked')}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      {t('signIn')}
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </>
+                  )}
                 </Button>
               </form>
 

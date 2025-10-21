@@ -51,7 +51,7 @@ const ParticleField = () => {
     }
 
     // Mouse interaction
-    let mouse = { x: 0, y: 0 };
+    const mouse = { x: 0, y: 0 };
     const handleMouseMove = (e: MouseEvent) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;

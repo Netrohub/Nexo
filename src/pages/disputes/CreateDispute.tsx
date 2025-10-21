@@ -13,7 +13,7 @@ const CreateDispute = () => {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get("orderId") || undefined;
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = (data: Record<string, unknown>) => {
     console.log("Dispute submitted:", data);
     toast.success("Dispute created successfully!");
     navigate("/disputes");
