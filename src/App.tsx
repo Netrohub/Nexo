@@ -8,6 +8,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import AnalyticsProvider from "./components/AnalyticsProvider";
 import RequireAuth from "./components/RequireAuth";
+import RequireKYC from "./components/RequireKYC";
 import { Loader2 } from "lucide-react";
 
 // Eagerly loaded pages (critical for initial render)
@@ -120,13 +121,14 @@ const App = () => (
           <Route path="/account/notifications" element={<RequireAuth><Notifications /></RequireAuth>} />
           <Route path="/account/billing" element={<RequireAuth><Billing /></RequireAuth>} />
           <Route path="/account/kyc" element={<RequireAuth><KYC /></RequireAuth>} />
+          <Route path="/account/kyc/:step" element={<RequireAuth><KYC /></RequireAuth>} />
           <Route path="/account/phone-verification" element={<RequireAuth><PhoneVerification /></RequireAuth>} />
-          <Route path="/seller/dashboard" element={<RequireAuth requiredRoles={['seller', 'admin']}><SellerDashboard /></RequireAuth>} />
+          <Route path="/seller/dashboard" element={<RequireAuth requiredRoles={['seller', 'admin']}><RequireKYC><SellerDashboard /></RequireKYC></RequireAuth>} />
           <Route path="/seller/onboarding" element={<RequireAuth><SellerOnboarding /></RequireAuth>} />
-          <Route path="/seller/profile" element={<RequireAuth requiredRoles={['seller', 'admin']}><SellerProfilePage /></RequireAuth>} />
-          <Route path="/seller/products" element={<RequireAuth requiredRoles={['seller', 'admin']}><SellerProducts /></RequireAuth>} />
-          <Route path="/seller/products/create" element={<RequireAuth requiredRoles={['seller', 'admin']}><CreateProduct /></RequireAuth>} />
-          <Route path="/seller/list/social" element={<RequireAuth requiredRoles={['seller', 'admin']}><ListSocialAccount /></RequireAuth>} />
+          <Route path="/seller/profile" element={<RequireAuth requiredRoles={['seller', 'admin']}><RequireKYC><SellerProfilePage /></RequireKYC></RequireAuth>} />
+          <Route path="/seller/products" element={<RequireAuth requiredRoles={['seller', 'admin']}><RequireKYC><SellerProducts /></RequireKYC></RequireAuth>} />
+          <Route path="/seller/products/create" element={<RequireAuth requiredRoles={['seller', 'admin']}><RequireKYC><CreateProduct /></RequireKYC></RequireAuth>} />
+          <Route path="/seller/list/social" element={<RequireAuth requiredRoles={['seller', 'admin']}><RequireKYC><ListSocialAccount /></RequireKYC></RequireAuth>} />
           <Route path="/seller/list/gaming" element={<RequireAuth requiredRoles={['seller', 'admin']}><ListGamingAccount /></RequireAuth>} />
           <Route path="/seller/orders" element={<RequireAuth requiredRoles={['seller', 'admin']}><SellerOrders /></RequireAuth>} />
           <Route path="/seller/billing" element={<RequireAuth requiredRoles={['seller', 'admin']}><SellerBilling /></RequireAuth>} />

@@ -1,324 +1,599 @@
-import { useState } from "react";
-import AccountLayout from "@/components/AccountLayout";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import Starfield from '@/components/Starfield';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
-  CheckCircle2,
-  Circle,
-  Mail,
-  Smartphone,
-  ShieldCheck,
-  AlertCircle,
-  ExternalLink,
-  FileText
-} from "lucide-react";
-
-interface VerificationStatus {
-  email: boolean;
-  phone: boolean;
-  identity: boolean;
-}
+  Shield, 
+  CheckCircle, 
+  AlertCircle, 
+  Upload, 
+  Camera, 
+  FileText,
+  CreditCard,
+  MapPin,
+  Phone,
+  User,
+  ArrowLeft,
+  ArrowRight
+} from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const KYC = () => {
-  const { toast } = useToast();
-  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({
-    email: true, // Simulating verified email
-    phone: false,
-    identity: false,
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const { step } = useParams();
+  const [currentStep, setCurrentStep] = useState(step || 'overview');
+  const [formData, setFormData] = useState({
+    identity: {
+      firstName: '',
+      lastName: '',
+      dateOfBirth: '',
+      nationality: '',
+      idNumber: '',
+    },
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: '',
+    },
+    phone: {
+      phoneNumber: '',
+      countryCode: '+1',
+    },
+    documents: {
+      idFront: null as File | null,
+      idBack: null as File | null,
+      selfie: null as File | null,
+      proofOfAddress: null as File | null,
+    },
+    bankAccount: {
+      accountHolderName: '',
+      bankName: '',
+      accountNumber: '',
+      routingNumber: '',
+      accountType: 'checking',
+    },
   });
 
-  const handleVerifyEmail = () => {
-    toast({
-      title: "Verification Email Sent",
-      description: "Please check your inbox and click the verification link.",
-    });
+  const kycSteps = [
+    { key: 'overview', title: t('kyc.overview'), icon: Shield },
+    { key: 'identity', title: t('kyc.identityVerification'), icon: User },
+    { key: 'address', title: t('kyc.addressVerification'), icon: MapPin },
+    { key: 'phone', title: t('kyc.phoneVerification'), icon: Phone },
+    { key: 'documents', title: t('kyc.documentUpload'), icon: FileText },
+    { key: 'bankAccount', title: t('kyc.bankAccountVerification'), icon: CreditCard },
+  ];
+
+  const currentStepIndex = kycSteps.findIndex(s => s.key === currentStep);
+  const progress = ((currentStepIndex + 1) / kycSteps.length) * 100;
+
+  const handleInputChange = (section: string, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof typeof prev],
+        [field]: value,
+      },
+    }));
   };
 
-  const handleStartPersonaVerification = () => {
-    toast({
-      title: "Opening Persona Verification",
-      description: "You'll be redirected to Persona to complete identity verification.",
-    });
-    // In production, this would redirect to Persona's verification flow
-    // window.open('https://withpersona.com/verify?inquiry-template-id=YOUR_TEMPLATE_ID', '_blank');
+  const handleFileUpload = (field: string, file: File) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: {
+        ...prev.documents,
+        [field]: file,
+      },
+    }));
+  };
+
+  const handleSubmit = async (section: string) => {
+    console.log(`📝 Submitting KYC ${section} step`);
     
-    // Simulate verification completion after 3 seconds (for demo)
-    setTimeout(() => {
-      setVerificationStatus(prev => ({ ...prev, identity: true }));
-      toast({
-        title: "Identity Verified!",
-        description: "Your identity has been successfully verified by Persona.",
-      });
-    }, 3000);
+    const loadingToast = toast.loading(`📤 Submitting ${section} verification...`);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast.dismiss(loadingToast);
+      toast.success(`✅ ${section} verification submitted successfully!`);
+      
+      // Move to next step
+      const nextStepIndex = currentStepIndex + 1;
+      if (nextStepIndex < kycSteps.length) {
+        setCurrentStep(kycSteps[nextStepIndex].key);
+      }
+      
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error(`❌ Failed to submit ${section} verification`);
+    }
   };
 
-  const verifiedSteps = Object.values(verificationStatus).filter(Boolean).length;
-  const totalSteps = 3;
-  const progress = (verifiedSteps / totalSteps) * 100;
-  const isFullyVerified = verifiedSteps === totalSteps;
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Shield className="h-8 w-8 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">{t('kyc.verificationOverview')}</h2>
+              <p className="text-foreground/70">{t('kyc.verificationOverviewDescription')}</p>
+            </div>
+
+            <div className="grid gap-4">
+              {kycSteps.slice(1).map((step, index) => (
+                <Card key={step.key} className="glass-card">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <step.icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{step.title}</h3>
+                        <p className="text-sm text-foreground/70">
+                          {t(`kyc.${step.key}Description`)}
+                        </p>
+                      </div>
+                      <Badge variant="secondary">Step {index + 1}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="p-4 rounded-lg border border-primary/20 bg-primary/5">
+              <h4 className="font-semibold text-primary mb-2">{t('kyc.verificationBenefits')}</h4>
+              <ul className="text-sm text-foreground/70 space-y-1">
+                <li>• {t('kyc.benefit1')}</li>
+                <li>• {t('kyc.benefit2')}</li>
+                <li>• {t('kyc.benefit3')}</li>
+                <li>• {t('kyc.benefit4')}</li>
+              </ul>
+            </div>
+
+            <Button 
+              onClick={() => setCurrentStep('identity')}
+              className="w-full btn-glow"
+              size="lg"
+            >
+              {t('kyc.startVerification')}
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        );
+
+      case 'identity':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <User className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">{t('kyc.identityVerification')}</h2>
+              <p className="text-foreground/70">{t('kyc.identityDescription')}</p>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">{t('kyc.firstName')}</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.identity.firstName}
+                    onChange={(e) => handleInputChange('identity', 'firstName', e.target.value)}
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">{t('kyc.lastName')}</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.identity.lastName}
+                    onChange={(e) => handleInputChange('identity', 'lastName', e.target.value)}
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="dateOfBirth">{t('kyc.dateOfBirth')}</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={formData.identity.dateOfBirth}
+                  onChange={(e) => handleInputChange('identity', 'dateOfBirth', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="nationality">{t('kyc.nationality')}</Label>
+                <Input
+                  id="nationality"
+                  value={formData.identity.nationality}
+                  onChange={(e) => handleInputChange('identity', 'nationality', e.target.value)}
+                  placeholder="United States"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="idNumber">{t('kyc.idNumber')}</Label>
+                <Input
+                  id="idNumber"
+                  value={formData.identity.idNumber}
+                  onChange={(e) => handleInputChange('identity', 'idNumber', e.target.value)}
+                  placeholder="123456789"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setCurrentStep('overview')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {t('kyc.back')}
+              </Button>
+              <Button onClick={() => handleSubmit('identity')} className="btn-glow flex-1">
+                {t('kyc.continue')}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'address':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">{t('kyc.addressVerification')}</h2>
+              <p className="text-foreground/70">{t('kyc.addressDescription')}</p>
+            </div>
+
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="street">{t('kyc.streetAddress')}</Label>
+                <Input
+                  id="street"
+                  value={formData.address.street}
+                  onChange={(e) => handleInputChange('address', 'street', e.target.value)}
+                  placeholder="123 Main Street"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="city">{t('kyc.city')}</Label>
+                  <Input
+                    id="city"
+                    value={formData.address.city}
+                    onChange={(e) => handleInputChange('address', 'city', e.target.value)}
+                    placeholder="New York"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">{t('kyc.state')}</Label>
+                  <Input
+                    id="state"
+                    value={formData.address.state}
+                    onChange={(e) => handleInputChange('address', 'state', e.target.value)}
+                    placeholder="NY"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="postalCode">{t('kyc.postalCode')}</Label>
+                  <Input
+                    id="postalCode"
+                    value={formData.address.postalCode}
+                    onChange={(e) => handleInputChange('address', 'postalCode', e.target.value)}
+                    placeholder="10001"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="country">{t('kyc.country')}</Label>
+                  <Input
+                    id="country"
+                    value={formData.address.country}
+                    onChange={(e) => handleInputChange('address', 'country', e.target.value)}
+                    placeholder="United States"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setCurrentStep('identity')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {t('kyc.back')}
+              </Button>
+              <Button onClick={() => handleSubmit('address')} className="btn-glow flex-1">
+                {t('kyc.continue')}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'phone':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <Phone className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">{t('kyc.phoneVerification')}</h2>
+              <p className="text-foreground/70">{t('kyc.phoneDescription')}</p>
+            </div>
+
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="phoneNumber">{t('kyc.phoneNumber')}</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.phone.countryCode}
+                    onChange={(e) => handleInputChange('phone', 'countryCode', e.target.value)}
+                    className="w-20"
+                    placeholder="+1"
+                  />
+                  <Input
+                    id="phoneNumber"
+                    value={formData.phone.phoneNumber}
+                    onChange={(e) => handleInputChange('phone', 'phoneNumber', e.target.value)}
+                    placeholder="(555) 123-4567"
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg border border-blue-500/20 bg-blue-500/5">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-blue-500 mb-1">{t('kyc.phoneVerificationNote')}</h4>
+                  <p className="text-sm text-blue-500/80">{t('kyc.phoneVerificationNoteDescription')}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setCurrentStep('address')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {t('kyc.back')}
+              </Button>
+              <Button onClick={() => handleSubmit('phone')} className="btn-glow flex-1">
+                {t('kyc.sendVerificationCode')}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'documents':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <FileText className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">{t('kyc.documentUpload')}</h2>
+              <p className="text-foreground/70">{t('kyc.documentDescription')}</p>
+            </div>
+
+            <div className="grid gap-6">
+              {[
+                { key: 'idFront', label: t('kyc.idFront'), description: t('kyc.idFrontDescription') },
+                { key: 'idBack', label: t('kyc.idBack'), description: t('kyc.idBackDescription') },
+                { key: 'selfie', label: t('kyc.selfie'), description: t('kyc.selfieDescription') },
+                { key: 'proofOfAddress', label: t('kyc.proofOfAddress'), description: t('kyc.proofOfAddressDescription') },
+              ].map((doc) => (
+                <Card key={doc.key} className="glass-card">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="font-semibold">{doc.label}</h4>
+                        <p className="text-sm text-foreground/70">{doc.description}</p>
+                      </div>
+                      
+                      <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                        {formData.documents[doc.key as keyof typeof formData.documents] ? (
+                          <div className="space-y-2">
+                            <CheckCircle className="h-8 w-8 text-green-500 mx-auto" />
+                            <p className="text-sm text-green-500 font-medium">File uploaded</p>
+                            <p className="text-xs text-foreground/60">
+                              {formData.documents[doc.key as keyof typeof formData.documents]?.name}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <Upload className="h-8 w-8 text-foreground/40 mx-auto" />
+                            <p className="text-sm text-foreground/70">Click to upload or drag and drop</p>
+                            <p className="text-xs text-foreground/50">PNG, JPG, PDF up to 10MB</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*,.pdf';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) handleFileUpload(doc.key, file);
+                          };
+                          input.click();
+                        }}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {formData.documents[doc.key as keyof typeof formData.documents] ? 'Change File' : 'Upload File'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setCurrentStep('phone')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {t('kyc.back')}
+              </Button>
+              <Button onClick={() => handleSubmit('documents')} className="btn-glow flex-1">
+                {t('kyc.continue')}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'bankAccount':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <CreditCard className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">{t('kyc.bankAccountVerification')}</h2>
+              <p className="text-foreground/70">{t('kyc.bankAccountDescription')}</p>
+            </div>
+
+            <div className="grid gap-4">
+              <div>
+                <Label htmlFor="accountHolderName">{t('kyc.accountHolderName')}</Label>
+                <Input
+                  id="accountHolderName"
+                  value={formData.bankAccount.accountHolderName}
+                  onChange={(e) => handleInputChange('bankAccount', 'accountHolderName', e.target.value)}
+                  placeholder="John Doe"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="bankName">{t('kyc.bankName')}</Label>
+                <Input
+                  id="bankName"
+                  value={formData.bankAccount.bankName}
+                  onChange={(e) => handleInputChange('bankAccount', 'bankName', e.target.value)}
+                  placeholder="Chase Bank"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="accountNumber">{t('kyc.accountNumber')}</Label>
+                  <Input
+                    id="accountNumber"
+                    type="password"
+                    value={formData.bankAccount.accountNumber}
+                    onChange={(e) => handleInputChange('bankAccount', 'accountNumber', e.target.value)}
+                    placeholder="****1234"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="routingNumber">{t('kyc.routingNumber')}</Label>
+                  <Input
+                    id="routingNumber"
+                    value={formData.bankAccount.routingNumber}
+                    onChange={(e) => handleInputChange('bankAccount', 'routingNumber', e.target.value)}
+                    placeholder="021000021"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="accountType">{t('kyc.accountType')}</Label>
+                <select
+                  id="accountType"
+                  value={formData.bankAccount.accountType}
+                  onChange={(e) => handleInputChange('bankAccount', 'accountType', e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background"
+                >
+                  <option value="checking">Checking</option>
+                  <option value="savings">Savings</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg border border-green-500/20 bg-green-500/5">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-green-500 mb-1">{t('kyc.bankAccountSecurity')}</h4>
+                  <p className="text-sm text-green-500/80">{t('kyc.bankAccountSecurityDescription')}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setCurrentStep('documents')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {t('kyc.back')}
+              </Button>
+              <Button onClick={() => handleSubmit('bankAccount')} className="btn-glow flex-1">
+                {t('kyc.completeVerification')}
+                <CheckCircle className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        );
+
+      default:
+        return <div>Step not found</div>;
+    }
+  };
 
   return (
-    <AccountLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
-            KYC Verification
-          </h1>
-          <p className="text-foreground/60">Complete your account verification to unlock all features</p>
-        </div>
-
-        {/* Overall Progress */}
-        <Card className="glass-card p-6 border border-primary/30">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <ShieldCheck className={`h-8 w-8 ${isFullyVerified ? 'text-primary' : 'text-foreground/50'}`} />
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground">Verification Progress</h2>
-                  <p className="text-sm text-foreground/60">
-                    {verifiedSteps} of {totalSteps} steps completed
-                  </p>
+    <div className="min-h-screen flex flex-col relative">
+      <Starfield />
+      <Navbar />
+      
+      <main className="flex-1 relative z-10">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Progress Header */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-6 w-6 text-primary" />
+                  <h1 className="text-2xl font-bold">{t('kyc.verification')}</h1>
                 </div>
+                <Badge variant="secondary">Step {currentStepIndex + 1} of {kycSteps.length}</Badge>
               </div>
-              <Progress value={progress} className="h-3 mt-4" />
+              
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>{kycSteps[currentStepIndex]?.title}</span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+                <Progress value={progress} className="h-2" />
+              </div>
             </div>
-            {isFullyVerified && (
-              <Badge className="badge-glow border-0">
-                <CheckCircle2 className="h-4 w-4 mr-1" />
-                Fully Verified
-              </Badge>
-            )}
+
+            {/* Step Content */}
+            <Card className="glass-card">
+              <CardContent className="p-8">
+                {renderStepContent()}
+              </CardContent>
+            </Card>
           </div>
-          
-          {!isFullyVerified && (
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/5 border border-primary/20">
-              <AlertCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-foreground mb-1">Why verify your account?</p>
-                <ul className="text-sm text-foreground/70 space-y-1">
-                  <li>• Unlock higher transaction limits</li>
-                  <li>• Build trust with buyers and sellers</li>
-                  <li>• Access premium features</li>
-                  <li>• Ensure account security</li>
-                </ul>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Verification Steps */}
-        <div className="space-y-4">
-          {/* Step 1: Email Verification */}
-          <Card className={`glass-card p-6 border ${verificationStatus.email ? 'border-primary/30' : 'border-border/30'}`}>
-            <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-full ${verificationStatus.email ? 'bg-primary/20 border-2 border-primary' : 'bg-muted border-2 border-border/30'}`}>
-                {verificationStatus.email ? (
-                  <CheckCircle2 className="h-6 w-6 text-primary" />
-                ) : (
-                  <Circle className="h-6 w-6 text-foreground/50" />
-                )}
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                      Step 1: Email Verification
-                      {verificationStatus.email && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                          Verified
-                        </Badge>
-                      )}
-                    </h3>
-                    <p className="text-sm text-foreground/60 mt-1">
-                      Verify your email address to secure your account
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 mt-4">
-                  <Mail className="h-5 w-5 text-primary/70" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">john.doe@example.com</p>
-                    <p className="text-xs text-foreground/60">
-                      {verificationStatus.email ? 'Email verified ✓' : 'Email not verified'}
-                    </p>
-                  </div>
-                  {!verificationStatus.email && (
-                    <Button size="sm" variant="outline" className="glass-card border-border/50" onClick={handleVerifyEmail}>
-                      Verify Email
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Step 2: Phone Verification */}
-          <Card className={`glass-card p-6 border ${verificationStatus.phone ? 'border-primary/30' : 'border-border/30'}`}>
-            <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-full ${verificationStatus.phone ? 'bg-primary/20 border-2 border-primary' : 'bg-muted border-2 border-border/30'}`}>
-                {verificationStatus.phone ? (
-                  <CheckCircle2 className="h-6 w-6 text-primary" />
-                ) : (
-                  <Circle className="h-6 w-6 text-foreground/50" />
-                )}
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                      Step 2: Phone Verification
-                      {verificationStatus.phone && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                          Verified
-                        </Badge>
-                      )}
-                    </h3>
-                    <p className="text-sm text-foreground/60 mt-1">
-                      Add and verify your phone number for account security
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 mt-4">
-                  <Smartphone className="h-5 w-5 text-primary/70" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">
-                      {verificationStatus.phone ? '+1 (555) 123-4567' : 'No phone number added'}
-                    </p>
-                    <p className="text-xs text-foreground/60">
-                      {verificationStatus.phone ? 'Phone verified ✓' : 'Phone not verified'}
-                    </p>
-                  </div>
-                  <Button asChild size="sm" variant="outline" className="glass-card border-border/50">
-                    <Link to="/account/phone-verification">
-                      {verificationStatus.phone ? 'Manage Phone' : 'Verify Phone'}
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Step 3: Identity Verification (Persona) */}
-          <Card className={`glass-card p-6 border ${verificationStatus.identity ? 'border-primary/30' : 'border-border/30'}`}>
-            <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-full ${verificationStatus.identity ? 'bg-primary/20 border-2 border-primary' : 'bg-muted border-2 border-border/30'}`}>
-                {verificationStatus.identity ? (
-                  <CheckCircle2 className="h-6 w-6 text-primary" />
-                ) : (
-                  <Circle className="h-6 w-6 text-foreground/50" />
-                )}
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                      Step 3: Identity Verification
-                      {verificationStatus.identity && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                          Verified by Persona
-                        </Badge>
-                      )}
-                    </h3>
-                    <p className="text-sm text-foreground/60 mt-1">
-                      Complete identity verification through our trusted partner
-                    </p>
-                  </div>
-                </div>
-
-                {!verificationStatus.identity && (
-                  <div className="mt-4 p-4 rounded-lg bg-muted/30 border border-border/30">
-                    <div className="flex items-center gap-3 mb-3">
-                      <FileText className="h-5 w-5 text-primary/70" />
-                      <p className="text-sm font-semibold text-foreground">What you'll need:</p>
-                    </div>
-                    <ul className="text-sm text-foreground/70 space-y-2 ml-8">
-                      <li>• Government-issued ID (Passport, Driver's License, or National ID)</li>
-                      <li>• Clear selfie photo for verification</li>
-                      <li>• Proof of address (optional, for enhanced verification)</li>
-                      <li>• 5-10 minutes to complete the process</li>
-                    </ul>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-4 mt-4">
-                  {verificationStatus.identity ? (
-                    <>
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                          <ShieldCheck className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">Identity Verified</p>
-                          <p className="text-xs text-foreground/60 flex items-center gap-1">
-                            Verified by 
-                            <span className="font-semibold text-primary">Persona</span>
-                          </p>
-                        </div>
-                      </div>
-                      <Badge className="bg-gradient-to-r from-primary to-accent text-white border-0">
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Verified
-                      </Badge>
-                    </>
-                  ) : (
-                    <>
-                      <Button 
-                        className="btn-glow" 
-                        onClick={handleStartPersonaVerification}
-                        disabled={!verificationStatus.email || !verificationStatus.phone}
-                      >
-                        <ShieldCheck className="h-4 w-4 mr-2" />
-                        Start Identity Verification
-                        <ExternalLink className="h-4 w-4 ml-2" />
-                      </Button>
-                      <div className="flex items-center gap-2 text-xs text-foreground/50">
-                        <span>Powered by</span>
-                        <span className="font-bold text-foreground/70">Persona</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {!verificationStatus.email || !verificationStatus.phone ? (
-                  <p className="text-xs text-foreground/50 mt-3 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    Complete email and phone verification first
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </Card>
         </div>
-
-        {/* Trust & Security Info */}
-        <Card className="glass-card p-6 border border-border/30">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-              <ShieldCheck className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-foreground mb-2">Your Privacy & Security</h3>
-              <div className="space-y-2 text-sm text-foreground/70">
-                <p>✓ All data is encrypted and stored securely</p>
-                <p>✓ Identity verification handled by Persona, a trusted industry leader</p>
-                <p>✓ We never share your personal information with third parties</p>
-                <p>✓ Verification typically takes 5-10 minutes</p>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </AccountLayout>
+      </main>
+      
+      <Footer />
+    </div>
   );
 };
 

@@ -1,4 +1,5 @@
 import AccountLayout from "@/components/AccountLayout";
+import KYCStatusComponent from "@/components/KYCStatus";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,9 @@ import {
   Star,
   ArrowRight,
   Package,
-  Clock
+  Clock,
+  Shield,
+  AlertTriangle
 } from "lucide-react";
 
 const stats = [
@@ -180,6 +183,34 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </Card>
+
+        {/* KYC Status */}
+        <Card className="glass-card p-6 border border-orange-500/30">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+              <Shield className="h-6 w-6 text-orange-500" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-foreground mb-2">Identity Verification Required</h3>
+              <p className="text-foreground/60 mb-4">
+                Complete KYC verification to start selling on our platform and access seller features.
+              </p>
+              <div className="flex gap-3">
+                <Button asChild className="btn-glow">
+                  <Link to="/account/kyc">
+                    Complete Verification
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/account/kyc">
+                    View Status
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </Card>
 
