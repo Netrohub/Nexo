@@ -1,0 +1,51 @@
+# NXOLand Environment Configuration
+# Copy this file to .env and update the values
+
+# ===========================================
+# DEPLOYMENT MODE
+# ===========================================
+# Set to 'true' to show coming soon page
+# Set to 'false' to show full React marketplace
+VITE_COMING_SOON_MODE=true
+
+# ===========================================
+# API CONFIGURATION
+# ===========================================
+# API Base URL (your Laravel backend)
+VITE_API_BASE_URL=http://localhost:8000/api
+
+# Mock API (for development without backend)
+VITE_MOCK_API=true
+
+# ===========================================
+# APPLICATION SETTINGS
+# ===========================================
+VITE_APP_NAME=NXOLand
+VITE_APP_ENV=production
+
+# ===========================================
+# AUTHENTICATION
+# ===========================================
+VITE_AUTH_TOKEN_KEY=nxoland_auth_token
+VITE_AUTH_REFRESH_TOKEN_KEY=nxoland_refresh_token
+
+# ===========================================
+# ANALYTICS
+# ===========================================
+VITE_GA_TRACKING_ID=G-23N0Q9P0S9
+VITE_ENABLE_ANALYTICS=true
+
+# ===========================================
+# CLOUDFLARE TURNSTILE
+# ===========================================
+VITE_TURNSTILE_SITE_KEY=your-turnstile-site-key
+VITE_ENABLE_TURNSTILE=true
+VITE_TURNSTILE_THEME=dark
+VITE_TURNSTILE_SIZE=normal
+
+# ===========================================
+# FEATURES
+# ===========================================
+VITE_ENABLE_REACT_QUERY_DEVTOOLS=false
+VITE_ENABLE_DEBUG_LOGS=false
+VITE_ENABLE_PREFETCH=true
