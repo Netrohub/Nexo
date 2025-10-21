@@ -26,6 +26,15 @@ else
     sudo git pull origin main
 fi
 
+# If git clone failed due to existing directory, try to initialize
+if [ ! -d ".git" ]; then
+    echo "📦 Initializing git repository..."
+    sudo git init
+    sudo git remote add origin https://github.com/Netrohub/Nexo.git
+    sudo git fetch origin
+    sudo git reset --hard origin/main
+fi
+
 # Set permissions
 echo "🔐 Setting permissions..."
 sudo chown -R www-data:www-data "$SITE_DIR"
