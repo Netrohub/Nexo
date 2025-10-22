@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   TrendingUp, 
   ShoppingBag, 
@@ -72,6 +73,14 @@ const recentOrders = [
 ];
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  
+  // Check if user has completed KYC
+  const isKYCVerified = user?.emailVerified && user?.phoneVerified && user?.kycStatus === 'verified';
+  
+  // Check if user is Elite plan
+  const isElitePlan = user?.subscription?.plan === 'Elite';
+  
   return (
     <AccountLayout>
       <div className="space-y-6">
@@ -129,12 +138,24 @@ const Dashboard = () => {
                 Add Funds
               </Link>
             </Button>
-            <Button asChild variant="outline" className="glass-card border-border/50 justify-start">
-              <Link to="/seller/dashboard">
+            {isElitePlan ? (
+              <Button asChild variant="outline" className="glass-card border-border/50 justify-start">
+                <Link to="/seller/dashboard">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  View Analytics
+                </Link>
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                className="glass-card border-border/50 justify-start opacity-50 cursor-not-allowed"
+                disabled
+                title="Elite plan required"
+              >
                 <TrendingUp className="h-4 w-4 mr-2" />
-                View Analytics
-              </Link>
-            </Button>
+                View Analytics (Elite Only)
+              </Button>
+            )}
           </div>
         </Card>
 
@@ -186,33 +207,35 @@ const Dashboard = () => {
           </div>
         </Card>
 
-        {/* KYC Status */}
-        <Card className="glass-card p-6 border border-orange-500/30">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
-              <Shield className="h-6 w-6 text-orange-500" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-foreground mb-2">Identity Verification Required</h3>
-              <p className="text-foreground/60 mb-4">
-                Complete KYC verification to start selling on our platform and access seller features.
-              </p>
-              <div className="flex gap-3">
-                <Button asChild className="btn-glow">
-                  <Link to="/account/kyc">
-                    Complete Verification
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link to="/account/kyc">
-                    View Status
-                  </Link>
-                </Button>
+        {/* KYC Status - Only show to unverified users */}
+        {!isKYCVerified && (
+          <Card className="glass-card p-6 border border-orange-500/30">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                <Shield className="h-6 w-6 text-orange-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-foreground mb-2">Identity Verification Required</h3>
+                <p className="text-foreground/60 mb-4">
+                  Complete KYC verification to start selling on our platform and access seller features.
+                </p>
+                <div className="flex gap-3">
+                  <Button asChild className="btn-glow">
+                    <Link to="/account/kyc">
+                      Complete Verification
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <Link to="/account/kyc">
+                      View Status
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
 
         {/* Account Status */}
         <Card className="glass-card p-6 border border-primary/30">
