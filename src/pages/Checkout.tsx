@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Starfield from "@/components/Starfield";
@@ -7,11 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
+import { tapPayment } from "@/lib/tapPayment";
 import { 
   CreditCard, 
   Wallet, 
   Lock,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 
 const cartItems = [
@@ -26,9 +31,97 @@ const cartItems = [
 ];
 
 const Checkout = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  
+  // Form state
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [email, setEmail] = useState("");
+  
   const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
   const serviceFee = subtotal * 0.03;
   const total = subtotal + serviceFee;
+
+  // Get test cards if in sandbox
+  const testCards = tapPayment.isSandboxMode() ? tapPayment.getTestCards() : [];
+
+  const handleCompletePurchase = async () => {
+    // Validation
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!cardNumber || !cardName || !expiryDate || !cvv) {
+      toast({
+        title: "Card details incomplete",
+        description: "Please fill in all card details.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!agreeToTerms) {
+      toast({
+        title: "Terms required",
+        description: "You must agree to the Terms of Service and Refund Policy.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      toast({
+        title: "Processing payment...",
+        description: "Please wait while we process your payment securely.",
+      });
+
+      // Process payment through Tap
+      const paymentResult = await tapPayment.processCardPayment(
+        {
+          number: cardNumber.replace(/\s/g, ''),
+          name: cardName,
+          expiry: expiryDate,
+          cvv: cvv,
+        },
+        total,
+        'USD'
+      );
+
+      console.log('✅ Payment successful:', paymentResult);
+
+      toast({
+        title: "Payment successful! 🎉",
+        description: `Your order has been placed. Transaction ID: ${paymentResult.id}`,
+      });
+
+      // Redirect to success page after a short delay
+      setTimeout(() => {
+        navigate('/account/orders');
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('❌ Payment failed:', error);
+      toast({
+        title: "Payment failed",
+        description: error.message || "There was an error processing your payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -52,12 +145,15 @@ const Checkout = () => {
                 <h2 className="text-xl font-bold text-foreground mb-6">Contact Information</h2>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
+                    <Label htmlFor="email">Email Address <span className="text-destructive">*</span></Label>
                     <Input
                       id="email"
                       type="email"
                       placeholder="your@email.com"
                       className="glass-card border-border/50"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -90,32 +186,74 @@ const Checkout = () => {
                   </div>
                 </RadioGroup>
 
+                {/* Sandbox Test Card Info */}
+                {tapPayment.isSandboxMode() && testCards.length > 0 && (
+                  <div className="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <div className="flex items-start gap-2 mb-2">
+                      <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-blue-500">Sandbox Mode - Test Cards</p>
+                        <p className="text-sm text-blue-500/80 mt-1">Use these test cards for testing:</p>
+                      </div>
+                    </div>
+                    {testCards.map((card, idx) => (
+                      <div key={idx} className="text-xs text-blue-500/70 mt-2 font-mono">
+                        <strong>{card.type}:</strong> {card.number} | Exp: {card.expiry} | CVV: {card.cvv}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Card Details */}
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Card Number</Label>
+                    <Label htmlFor="cardName">Cardholder Name <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="cardName"
+                      placeholder="John Doe"
+                      className="glass-card border-border/50"
+                      value={cardName}
+                      onChange={(e) => setCardName(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cardNumber">Card Number <span className="text-destructive">*</span></Label>
                     <Input
                       id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
+                      placeholder="4111 1111 1111 1111"
                       className="glass-card border-border/50"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(e.target.value)}
+                      maxLength={19}
+                      required
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="expiry">Expiry Date</Label>
+                      <Label htmlFor="expiry">Expiry Date (MM/YY) <span className="text-destructive">*</span></Label>
                       <Input
                         id="expiry"
-                        placeholder="MM/YY"
+                        placeholder="01/25"
                         className="glass-card border-border/50"
+                        value={expiryDate}
+                        onChange={(e) => setExpiryDate(e.target.value)}
+                        maxLength={5}
+                        required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="cvc">CVC</Label>
+                      <Label htmlFor="cvv">CVV <span className="text-destructive">*</span></Label>
                       <Input
-                        id="cvc"
+                        id="cvv"
                         placeholder="123"
                         className="glass-card border-border/50"
+                        value={cvv}
+                        onChange={(e) => setCvv(e.target.value)}
+                        maxLength={4}
+                        required
                       />
                     </div>
                   </div>
@@ -125,17 +263,23 @@ const Checkout = () => {
               {/* Terms */}
               <Card className="glass-card p-6">
                 <div className="flex items-start space-x-3">
-                  <Checkbox id="terms" className="mt-1" />
+                  <Checkbox 
+                    id="terms" 
+                    className="mt-1"
+                    checked={agreeToTerms}
+                    onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
+                  />
                   <label
                     htmlFor="terms"
                     className="text-sm text-foreground/70 leading-relaxed cursor-pointer"
                   >
+                    <span className="text-destructive">* </span>
                     I agree to the{" "}
-                    <a href="/terms" className="text-primary hover:text-primary/80">
+                    <a href="/terms" target="_blank" className="text-primary hover:text-primary/80 underline">
                       Terms of Service
                     </a>
                     ,{" "}
-                    <a href="/refund-policy" className="text-primary hover:text-primary/80">
+                    <a href="/refund-policy" target="_blank" className="text-primary hover:text-primary/80 underline">
                       Refund Policy
                     </a>
                     , and understand that all sales are final once the product is delivered.
@@ -180,10 +324,21 @@ const Checkout = () => {
                 </div>
 
                 {/* Complete Purchase */}
-                <Button className="w-full btn-glow mb-4" size="lg">
+                <Button 
+                  className="w-full btn-glow mb-4" 
+                  size="lg"
+                  onClick={handleCompletePurchase}
+                  disabled={isProcessing || !agreeToTerms}
+                >
                   <Lock className="h-4 w-4 mr-2" />
-                  Complete Purchase
+                  {isProcessing ? 'Processing...' : 'Complete Purchase'}
                 </Button>
+                
+                {!agreeToTerms && (
+                  <p className="text-xs text-destructive text-center mb-4">
+                    Please agree to Terms of Service to continue
+                  </p>
+                )}
 
                 {/* Trust Badges */}
                 <div className="space-y-2 text-sm text-foreground/60">
