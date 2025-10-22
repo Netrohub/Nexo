@@ -577,6 +577,30 @@ class ApiClient {
   isAuthenticated(): boolean {
     return !!this.token;
   }
+
+  // KYC Methods
+  async updateKYCStatus(step: 'email' | 'phone' | 'identity', verified: boolean): Promise<void> {
+    if (USE_MOCK_API) {
+      console.log(`🎭 Using Mock API for KYC ${step} update`);
+      return mockApi.updateKYCStatus(step, verified);
+    }
+    
+    await this.request(`/kyc/${step}`, {
+      method: 'POST',
+      body: JSON.stringify({ verified }),
+    });
+  }
+
+  async completeKYC(): Promise<void> {
+    if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API for KYC completion');
+      return mockApi.completeKYC();
+    }
+    
+    await this.request('/kyc/complete', {
+      method: 'POST',
+    });
+  }
 }
 
 // Create and export API client instance

@@ -259,4 +259,44 @@ export const mockApi = {
       top_products: [],
     };
   },
+
+  // KYC Methods
+  async updateKYCStatus(step: 'email' | 'phone' | 'identity', verified: boolean) {
+    await delay(300);
+    
+    console.log(`🎭 Mock API: Updating KYC ${step} status to ${verified}`);
+    
+    // Update mock user data
+    switch (step) {
+      case 'email':
+        mockUser.emailVerified = verified;
+        mockUser.email_verified_at = verified ? new Date().toISOString() : null;
+        break;
+      case 'phone':
+        mockUser.phoneVerified = verified;
+        mockUser.phone_verified_at = verified ? new Date().toISOString() : null;
+        break;
+      case 'identity':
+        mockUser.kycStatus = verified ? 'verified' : 'incomplete';
+        break;
+    }
+    
+    console.log(`✅ Mock API: KYC ${step} status updated successfully`);
+  },
+
+  async completeKYC() {
+    await delay(500);
+    
+    console.log('🎭 Mock API: Completing KYC verification');
+    
+    // Update all KYC statuses
+    mockUser.emailVerified = true;
+    mockUser.phoneVerified = true;
+    mockUser.kycStatus = 'verified';
+    mockUser.email_verified_at = new Date().toISOString();
+    mockUser.phone_verified_at = new Date().toISOString();
+    mockUser.kycCompletedAt = new Date().toISOString();
+    
+    console.log('✅ Mock API: KYC verification completed successfully');
+  },
 };

@@ -41,10 +41,10 @@ const RequireKYC: React.FC<RequireKYCProps> = ({
               <Shield className="h-8 w-8 text-primary" />
             </div>
             <CardTitle className="text-2xl mb-2">
-              {t('kyc.verificationRequired')}
+              {t('Verification Required')}
             </CardTitle>
             <p className="text-foreground/70">
-              {t('kyc.verificationRequiredDescription')}
+              {t('Verify your account to access all features')}
             </p>
           </CardHeader>
           
@@ -71,10 +71,10 @@ const RequireKYC: React.FC<RequireKYCProps> = ({
                 <AlertTriangle className="h-5 w-5 text-orange-500 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-orange-500 mb-1">
-                    {t('kyc.sellerAccessRestricted')}
+                    {t('Your Access is Restricted')}
                   </h4>
                   <p className="text-sm text-orange-500/80">
-                    {t('kyc.sellerAccessRestrictedDescription')}
+                    {t('Please Complete Your Verification')}
                   </p>
                 </div>
               </div>
@@ -107,24 +107,24 @@ const RequireKYC: React.FC<RequireKYCProps> = ({
             <div className="flex gap-3">
               <Button asChild className="btn-glow flex-1">
                 <Link to="/account/kyc">
-                  {t('kyc.completeVerification')}
+                  {t('Complete Your Verification')}
                 </Link>
               </Button>
               <Button variant="outline" asChild>
                 <Link to="/account/dashboard">
-                  {t('kyc.backToAccount')}
+                  {t('Back To Account')}
                 </Link>
               </Button>
             </div>
 
             {/* Benefits */}
             <div className="p-4 rounded-lg border border-primary/20 bg-primary/5">
-              <h4 className="font-semibold text-primary mb-2">{t('kyc.verificationBenefits')}</h4>
+              <h4 className="font-semibold text-primary mb-2">{t('Verification Benefits')}</h4>
               <ul className="text-sm text-foreground/70 space-y-1">
-                <li>• {t('kyc.benefit1')}</li>
-                <li>• {t('kyc.benefit2')}</li>
-                <li>• {t('kyc.benefit3')}</li>
-                <li>• {t('kyc.benefit4')}</li>
+                <li>• {t('benefit1')}</li>
+                <li>• {t('benefit2')}</li>
+                <li>• {t('benefit3')}</li>
+                <li>• {t('benefit4')}</li>
               </ul>
             </div>
           </CardContent>

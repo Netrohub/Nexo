@@ -76,7 +76,7 @@ const countries = [
 
 const KYC = () => {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, updateKYCStatus, completeKYC } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [countryOpen, setCountryOpen] = useState(false);
@@ -121,15 +121,18 @@ const KYC = () => {
 
   const handleEmailVerification = async () => {
     try {
-      toast.loading(t('SendingEmail'));
+      toast.loading('Sending verification email...');
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Update KYC status in database
+      await updateKYCStatus('email', true);
+      
       setVerificationStatus(prev => ({ ...prev, email: true }));
-      toast.success(t('EmailSent'));
+      toast.success('Verification email sent!');
     } catch (error) {
-      toast.error(t('Email Verification Failed'));
+      toast.error('Email Verification Failed');
     }
   };
 
@@ -148,6 +151,9 @@ const KYC = () => {
       
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Update KYC status in database
+      await updateKYCStatus('phone', true);
+      
       setVerificationStatus(prev => ({ ...prev, phone: true }));
       toast.success('Phone verification code sent!');
     } catch (error) {
@@ -157,15 +163,24 @@ const KYC = () => {
 
   const handleIdentityVerification = async () => {
     try {
-      toast.loading(t('SubmittingVerification'));
+      toast.loading('Submitting verification...');
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 3000));
       
+      // Update KYC status in database
+      await updateKYCStatus('identity', true);
+      
       setVerificationStatus(prev => ({ ...prev, identity: true }));
-      toast.success(t('VerificationSubmitted'));
+      toast.success('Verification submitted successfully!');
+      
+      // If all steps are complete, mark KYC as completed
+      if (verificationStatus.email && verificationStatus.phone) {
+        await completeKYC();
+        toast.success('🎉 KYC verification completed! You can now access all seller features.');
+      }
     } catch (error) {
-      toast.error(t('VrificationFailed'));
+      toast.error('Verification Failed');
     }
   };
 
