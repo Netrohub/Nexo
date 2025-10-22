@@ -50,27 +50,6 @@ const DisputeDetail = () => {
     ],
   };
 
-  const [messages] = useState<Message[]>([
-    {
-      id: "1",
-      sender: { name: "You", role: "buyer" },
-      content: "I purchased this account yesterday but the engagement rate is much lower than advertised. Can you please check?",
-      timestamp: "2 days ago",
-    },
-    {
-      id: "2",
-      sender: { name: "Digital Elite", role: "seller" },
-      content: "Hello, thank you for reaching out. Can you please provide more details about the engagement issues you're experiencing?",
-      timestamp: "1 day ago",
-    },
-    {
-      id: "3",
-      sender: { name: "You", role: "buyer" },
-      content: "I've attached screenshots showing the analytics. The engagement is around 2-3% but your listing stated 8-12%.",
-      timestamp: "1 day ago",
-    },
-  ]);
-
   const handleSendMessage = () => {
     if (!newMessage.trim()) {
       toast({
