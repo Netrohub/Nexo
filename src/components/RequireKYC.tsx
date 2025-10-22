@@ -19,12 +19,16 @@ const RequireKYC: React.FC<RequireKYCProps> = ({
   const { t } = useLanguage();
   const { user } = useAuth();
 
-  // Mock KYC status - in real app, this would come from API
+  // Check KYC status based on user data
+  const isEmailVerified = user?.emailVerified || false;
+  const isPhoneVerified = user?.phoneVerified || false;
+  const isIdentityVerified = user?.kycStatus === 'verified';
+  
   const kycStatus = {
-    isVerified: false, // This would be user.kycStatus === 'approved'
-    status: 'incomplete', // 'pending' | 'approved' | 'rejected' | 'incomplete'
-    completedSteps: 2,
-    totalSteps: 5,
+    isVerified: isEmailVerified && isPhoneVerified && isIdentityVerified,
+    status: isEmailVerified && isPhoneVerified && isIdentityVerified ? 'approved' : 'incomplete',
+    completedSteps: [isEmailVerified, isPhoneVerified, isIdentityVerified].filter(Boolean).length,
+    totalSteps: 3,
   };
 
   // If KYC is not verified, show the KYC requirement screen
@@ -78,14 +82,12 @@ const RequireKYC: React.FC<RequireKYCProps> = ({
 
             {/* Required Steps */}
             <div className="space-y-3">
-              <h4 className="font-semibold">{t('kyc.requiredSteps')}</h4>
+              <h4 className="font-semibold">Required Steps</h4>
               <div className="space-y-2">
                 {[
-                  { key: 'identity', label: t('kyc.identityVerification'), completed: true },
-                  { key: 'address', label: t('kyc.addressVerification'), completed: false },
-                  { key: 'phone', label: t('kyc.phoneVerification'), completed: true },
-                  { key: 'documents', label: t('kyc.documentUpload'), completed: false },
-                  { key: 'bankAccount', label: t('kyc.bankAccountVerification'), completed: false },
+                  { key: 'email', label: 'Email Verification', completed: isEmailVerified },
+                  { key: 'phone', label: 'Phone Verification', completed: isPhoneVerified },
+                  { key: 'identity', label: 'Identity Verification', completed: isIdentityVerified },
                 ].map((step) => (
                   <div key={step.key} className="flex items-center gap-3 p-2 rounded-lg border border-border/50">
                     {step.completed ? (
