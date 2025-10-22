@@ -18,9 +18,9 @@ import { useRef, useState } from "react";
 import { analytics } from "@/lib/analytics";
 import { toast } from "sonner";
 
-// Form validation schema
+// Form validation schema - accepts email, phone, or username
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  identifier: z.string().min(3, "Please enter your email, phone, or username"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   remember: z.boolean().optional(),
 });
@@ -78,7 +78,8 @@ const Login = () => {
       // Show loading toast
       const loadingToast = toast.loading('🔐 Signing in...');
       
-      await login(data.email, data.password, data.remember);
+      // Detect input type and login accordingly
+      await login(data.identifier, data.password, data.remember);
       
       console.log('✅ Login successful! User is now authenticated.');
       
@@ -87,12 +88,14 @@ const Login = () => {
       
       // Show success with animation
       toast.success('✅ Welcome back!', {
-        description: `Logged in as ${data.email}`,
+        description: `Logged in as ${data.identifier}`,
         duration: 2000,
       });
       
-      // Track successful login
-      analytics.login('email');
+      // Track successful login (detect type)
+      const loginType = data.identifier.includes('@') ? 'email' : 
+                       /^\+?[\d\s-]+$/.test(data.identifier) ? 'phone' : 'username';
+      analytics.login(loginType);
       
       // Small delay for user to see success message
       setTimeout(() => {
@@ -144,30 +147,30 @@ const Login = () => {
                 }} 
                 className="space-y-5"
               >
-                {/* Email */}
+                {/* Email / Phone / Username */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-foreground">
-                    {t('emailAddress')}
+                  <Label htmlFor="identifier" className="text-foreground">
+                    {t('emailPhoneOrUsername') || 'Email, Phone, or Username'} <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
                     <Input
-                      id="email"
-                      type="email"
-                      placeholder="your@email.com"
+                      id="identifier"
+                      type="text"
+                      placeholder="your@email.com, +1234567890, or username"
                       className="pl-10 glass-card border-border/50 focus:border-primary/50"
-                      {...register("email")}
+                      {...register("identifier")}
                     />
                   </div>
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
+                  {errors.identifier && (
+                    <p className="text-sm text-destructive">{errors.identifier.message}</p>
                   )}
                 </div>
 
                 {/* Password */}
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-foreground">
-                    {t('password')}
+                    {t('password')} <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />

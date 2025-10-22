@@ -150,7 +150,7 @@ const Register = () => {
                 {/* Username */}
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-foreground">
-                    {t('username')}
+                    {t('username')} <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
@@ -170,7 +170,7 @@ const Register = () => {
                 {/* Email */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-foreground">
-                    {t('emailAddress')}
+                    {t('emailAddress')} <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
@@ -190,7 +190,7 @@ const Register = () => {
                 {/* Password */}
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-foreground">
-                    {t('password')}
+                    {t('password')} <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
@@ -213,7 +213,7 @@ const Register = () => {
                 {/* Confirm Password */}
                 <div className="space-y-2">
                   <Label htmlFor="passwordConfirmation" className="text-foreground">
-                    {t('confirmPassword')}
+                    {t('confirmPassword')} <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
@@ -242,6 +242,7 @@ const Register = () => {
                     htmlFor="agreeToTerms"
                     className="text-sm text-foreground/70 cursor-pointer leading-relaxed"
                   >
+                    <span className="text-destructive">* </span>
                     {t('iAgreeToThe')}{" "}
                     <Link to="/terms" className="text-primary hover:text-primary/80">
                       {t('termsOfService')}
