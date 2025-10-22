@@ -13,7 +13,7 @@ const translations = {
     // Navigation
     home: "Home",
     products: "Products",
-    games: "Games",
+    members: "Members",
     leaderboard: "Leaderboard",
     becomeASeller: "Become a Seller",
     login: "Login",
@@ -485,7 +485,7 @@ const translations = {
     // Navigation
     home: "الرئيسية 🏠",
     products: "المنتجات 📦",
-    games: "الألعاب 🎮",
+    members: "الأعضاء 👥",
     leaderboard: "قائمة المتصدرين 🏆",
     becomeASeller: "كن بائعًا 💼",
     login: "تسجيل الدخول 🔐",

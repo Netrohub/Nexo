@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 // Lazy loaded pages
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Games = lazy(() => import("./pages/Games"));
+const Members = lazy(() => import("./pages/Members"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const About = lazy(() => import("./pages/About"));
@@ -103,6 +104,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/games" element={<Games />} />
+          <Route path="/members" element={<Members />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/category/:category" element={<CategoryLanding />} />

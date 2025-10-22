@@ -121,8 +121,8 @@ const Navbar = () => {
                 {t('products')}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
               </Link>
-              <Link to="/games" className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors relative group">
-                {t('games')}
+              <Link to="/members" className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors relative group">
+                {t('members')}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
               </Link>
               <Link to="/leaderboard" className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors relative group">
