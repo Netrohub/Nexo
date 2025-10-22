@@ -13,24 +13,83 @@ import {
   Upload,
   Save
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+
+// Countries with dial codes
+const countries = [
+  { code: 'US', name: 'United States', dialCode: '+1', flag: '🇺🇸' },
+  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', flag: '🇸🇦' },
+  { code: 'AE', name: 'UAE', dialCode: '+971', flag: '🇦🇪' },
+  { code: 'GB', name: 'United Kingdom', dialCode: '+44', flag: '🇬🇧' },
+  { code: 'EG', name: 'Egypt', dialCode: '+20', flag: '🇪🇬' },
+];
 
 const Profile = () => {
+  const { toast } = useToast();
   const [avatar, setAvatar] = useState<string>("https://api.dicebear.com/7.x/avataaars/svg?seed=user");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
 
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Load saved avatar on mount
+  useEffect(() => {
+    const savedAvatar = localStorage.getItem('user_avatar');
+    if (savedAvatar) {
+      setAvatar(savedAvatar);
+    }
+  }, []);
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.type.startsWith('image/')) {
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a JPG, PNG, or GIF image.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image must be less than 2MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         if (e.target?.result) {
-          setAvatar(e.target.result as string);
+          const newAvatar = e.target.result as string;
+          setAvatar(newAvatar);
+          
+          // Save to backend (in mock mode, just localStorage)
+          localStorage.setItem('user_avatar', newAvatar);
+          
+          toast({
+            title: "Avatar updated!",
+            description: "Your profile picture has been saved successfully.",
+          });
         }
       };
       reader.readAsDataURL(file);
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload avatar. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -109,13 +168,16 @@ const Profile = () => {
             <div className="space-y-2">
               <Label htmlFor="username" className="text-foreground">
                 Username
+                <span className="text-xs text-foreground/50 ml-2">(Cannot be changed)</span>
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
                 <Input
                   id="username"
                   defaultValue="johndoe123"
-                  className="pl-10 glass-card border-border/50 focus:border-primary/50"
+                  className="pl-10 glass-card border-border/50 bg-muted/30 cursor-not-allowed"
+                  readOnly
+                  disabled
                 />
               </div>
             </div>
@@ -144,14 +206,66 @@ const Profile = () => {
               <Label htmlFor="phone" className="text-foreground">
                 Phone Number
               </Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
-                <Input
-                  id="phone"
-                  type="tel"
-                  defaultValue="+1 (555) 123-4567"
-                  className="pl-10 glass-card border-border/50 focus:border-primary/50"
-                />
+              <div className="flex gap-2">
+                {/* Country Code Selector */}
+                <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={countryOpen}
+                      className="w-[140px] justify-between glass-card border-border/50"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>{selectedCountry.flag}</span>
+                        <span>{selectedCountry.dialCode}</span>
+                      </span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[250px] p-0 glass-card border-border/50">
+                    <Command>
+                      <CommandInput placeholder="Search country..." />
+                      <CommandList>
+                        <CommandEmpty>No country found.</CommandEmpty>
+                        <CommandGroup>
+                          {countries.map((country) => (
+                            <CommandItem
+                              key={country.code}
+                              value={country.code}
+                              onSelect={() => {
+                                setSelectedCountry(country);
+                                setCountryOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedCountry.code === country.code ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <span className="mr-2">{country.flag}</span>
+                              <span>{country.name} ({country.dialCode})</span>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Phone Input */}
+                <div className="relative flex-1">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="123456789"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="pl-10 glass-card border-border/50 focus:border-primary/50"
+                  />
+                </div>
               </div>
             </div>
 
