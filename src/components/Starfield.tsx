@@ -22,6 +22,8 @@ const Starfield = () => {
     const stars: Array<{
       x: number;
       y: number;
+      vx: number;
+      vy: number;
       radius: number;
       opacity: number;
       twinkleSpeed: number;
@@ -32,6 +34,8 @@ const Starfield = () => {
       stars.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3, // Horizontal velocity
+        vy: (Math.random() - 0.5) * 0.3, // Vertical velocity
         radius: Math.random() * 1.5 + 0.5,
         opacity: Math.random(),
         twinkleSpeed: Math.random() * 0.02 + 0.01,
@@ -45,6 +49,16 @@ const Starfield = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       stars.forEach((star) => {
+        // Update position (drift movement)
+        star.x += star.vx;
+        star.y += star.vy;
+
+        // Wrap around screen edges
+        if (star.x < -10) star.x = canvas.width + 10;
+        if (star.x > canvas.width + 10) star.x = -10;
+        if (star.y < -10) star.y = canvas.height + 10;
+        if (star.y > canvas.height + 10) star.y = -10;
+
         // Twinkle effect
         star.twinklePhase += star.twinkleSpeed;
         star.opacity = Math.abs(Math.sin(star.twinklePhase)) * 0.8 + 0.2;
