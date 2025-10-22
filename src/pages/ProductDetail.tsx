@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Starfield from "@/components/Starfield";
@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
+import { useAddToCart, useAddToWishlist, useRemoveFromWishlist } from "@/hooks/useApi";
 import { 
   Star, 
   ShoppingCart, 
@@ -26,8 +28,77 @@ import {
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  
+  const addToCart = useAddToCart();
+  const addToWishlist = useAddToWishlist();
+  const removeFromWishlist = useRemoveFromWishlist();
+
+  const handleAddToCart = () => {
+    if (!id) return;
+    
+    addToCart.mutate(
+      { productId: parseInt(id), quantity: 1 },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Added to cart!",
+            description: "Product has been added to your cart.",
+          });
+        },
+      }
+    );
+  };
+
+  const handleToggleWishlist = () => {
+    if (!id) return;
+
+    if (isWishlisted) {
+      removeFromWishlist.mutate(parseInt(id), {
+        onSuccess: () => {
+          setIsWishlisted(false);
+          toast({
+            title: "Removed from wishlist",
+            description: "Product removed from your wishlist.",
+          });
+        },
+      });
+    } else {
+      addToWishlist.mutate(parseInt(id), {
+        onSuccess: () => {
+          setIsWishlisted(true);
+          toast({
+            title: "Added to wishlist!",
+            description: "Product added to your wishlist.",
+          });
+        },
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: product.description,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied!",
+        description: "Product link copied to clipboard.",
+      });
+    }
+  };
 
   // Mock product data
   const product = {
@@ -231,19 +302,30 @@ const ProductDetail = () => {
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">
-                  <Button size="lg" className="flex-1 btn-glow">
+                  <Button 
+                    size="lg" 
+                    className="flex-1 btn-glow"
+                    onClick={handleAddToCart}
+                    disabled={addToCart.isPending}
+                  >
                     <ShoppingCart className="h-5 w-5 mr-2" />
-                    Add to Cart
+                    {addToCart.isPending ? "Adding..." : "Add to Cart"}
                   </Button>
                   <Button
                     size="lg"
                     variant="outline"
                     className={`glass-card ${isWishlisted ? "border-destructive text-destructive" : "border-primary/30"}`}
-                    onClick={() => setIsWishlisted(!isWishlisted)}
+                    onClick={handleToggleWishlist}
+                    disabled={addToWishlist.isPending || removeFromWishlist.isPending}
                   >
                     <Heart className={`h-5 w-5 ${isWishlisted ? "fill-destructive" : ""}`} />
                   </Button>
-                  <Button size="lg" variant="outline" className="glass-card border-primary/30">
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="glass-card border-primary/30"
+                    onClick={handleShare}
+                  >
                     <Share2 className="h-5 w-5" />
                   </Button>
                 </div>

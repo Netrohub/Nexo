@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Starfield from "@/components/Starfield";
@@ -6,8 +7,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowRight, Tag } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCart, useRemoveFromCart } from "@/hooks/useApi";
+import { useToast } from "@/hooks/use-toast";
 
 const cartItems = [
   {
@@ -32,9 +35,44 @@ const cartItems = [
 
 const Cart = () => {
   const { t } = useLanguage();
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const { toast } = useToast();
+  const [couponCode, setCouponCode] = useState("");
+  const { data: cart, isLoading } = useCart();
+  const removeFromCart = useRemoveFromCart();
+
+  // Use real cart data if available, otherwise fall back to mock data
+  const items = cart?.items || cartItems;
+  const subtotal = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
   const serviceFee = subtotal * 0.03; // 3% service fee
   const total = subtotal + serviceFee;
+
+  const handleRemoveItem = (itemId: number) => {
+    removeFromCart.mutate(itemId, {
+      onSuccess: () => {
+        toast({
+          title: "Item removed",
+          description: "Item has been removed from your cart.",
+        });
+      },
+    });
+  };
+
+  const handleApplyCoupon = () => {
+    if (!couponCode.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a coupon code.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // TODO: Implement coupon application
+    toast({
+      title: "Coupon applied!",
+      description: `Coupon "${couponCode}" has been applied.`,
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -53,7 +91,7 @@ const Cart = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
-              {cartItems.map((item) => (
+              {items.map((item: any) => (
                 <Card key={item.id} className="glass-card p-6">
                   <div className="flex gap-4">
                     {/* Image */}
@@ -83,32 +121,16 @@ const Cart = () => {
                           size="icon"
                           variant="ghost"
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleRemoveItem(item.id)}
+                          disabled={removeFromCart.isPending}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
 
-                      {/* Quantity and Price */}
+                      {/* Price (no quantity controls per requirements) */}
                       <div className="flex items-center justify-between mt-4">
-                        <div className="flex items-center gap-3">
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-8 w-8 glass-card border-border/50"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="text-sm font-semibold w-8 text-center">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-8 w-8 glass-card border-border/50"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        <span className="text-sm text-foreground/60">Quantity: 1</span>
                         <p className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                           ${item.price.toFixed(2)}
                         </p>
@@ -126,9 +148,15 @@ const Cart = () => {
                     <Input
                       placeholder={t('enterCouponCode')}
                       className="pl-10 glass-card border-border/50"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
                     />
                   </div>
-                  <Button variant="outline" className="glass-card border-primary/30 hover:border-primary/50">
+                  <Button 
+                    variant="outline" 
+                    className="glass-card border-primary/30 hover:border-primary/50"
+                    onClick={handleApplyCoupon}
+                  >
                     {t('apply')}
                   </Button>
                 </div>

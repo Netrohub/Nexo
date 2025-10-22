@@ -5,6 +5,7 @@ import { ShoppingCart, Star } from "lucide-react";
 import { getCategoryImage } from "@/lib/categoryImages";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePrefetch } from "@/hooks/usePrefetch";
+import { useAddToCart } from "@/hooks/useApi";
 import { Link } from "react-router-dom";
 
 interface ProductCardProps {
@@ -21,6 +22,7 @@ interface ProductCardProps {
 const ProductCard = ({ id, name, price, image, category, rating, reviews, featured }: ProductCardProps) => {
   const { t } = useLanguage();
   const { prefetchProduct } = usePrefetch();
+  const addToCart = useAddToCart();
   
   // Use category-based image instead of product-specific image
   const displayImage = getCategoryImage(category, image);
@@ -30,6 +32,14 @@ const ProductCard = ({ id, name, price, image, category, rating, reviews, featur
     if (typeof id === 'number') {
       prefetchProduct(id);
     }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation to product detail
+    e.stopPropagation();
+    
+    const productId = typeof id === 'string' ? parseInt(id) : id;
+    addToCart.mutate({ productId, quantity: 1 });
   };
   
   return (
@@ -69,9 +79,13 @@ const ProductCard = ({ id, name, price, image, category, rating, reviews, featur
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full gap-2 btn-glow">
+        <Button 
+          className="w-full gap-2 btn-glow"
+          onClick={handleAddToCart}
+          disabled={addToCart.isPending}
+        >
           <ShoppingCart className="h-4 w-4" />
-          {t('addToCart')}
+          {addToCart.isPending ? t('adding') || 'Adding...' : t('addToCart')}
         </Button>
       </CardFooter>
     </Card>
