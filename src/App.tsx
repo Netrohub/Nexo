@@ -41,6 +41,7 @@ const Wallet = lazy(() => import("./pages/account/Wallet"));
 const Orders = lazy(() => import("./pages/account/Orders"));
 const Notifications = lazy(() => import("./pages/account/Notifications"));
 const Billing = lazy(() => import("./pages/account/Billing"));
+const AccountWishlist = lazy(() => import("./pages/account/Wishlist"));
 const KYC = lazy(() => import("./pages/account/KYC"));
 const PhoneVerification = lazy(() => import("./pages/account/PhoneVerification"));
 
@@ -117,6 +118,7 @@ const App = () => (
           <Route path="/account/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/account/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/account/wallet" element={<RequireAuth><Wallet /></RequireAuth>} />
+          <Route path="/account/wishlist" element={<RequireAuth><AccountWishlist /></RequireAuth>} />
           <Route path="/account/orders" element={<RequireAuth><Orders /></RequireAuth>} />
           <Route path="/account/notifications" element={<RequireAuth><Notifications /></RequireAuth>} />
           <Route path="/account/billing" element={<RequireAuth><Billing /></RequireAuth>} />
