@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Search, ShoppingCart, User, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +19,17 @@ import { analytics } from "@/lib/analytics";
 
 const Navbar = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      analytics.customEvent('search', { query: searchQuery.trim() });
+    }
+  };
 
   const handleLogout = async () => {
     console.log('🚪 Logging out...');
@@ -83,14 +94,16 @@ const Navbar = () => {
           </div>
 
           <div className="hidden lg:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
+            <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/70" />
               <Input
                 type="search"
-                placeholder="Search game accounts, social accounts..."
+                placeholder={t('searchPlaceholder') || "Search game accounts, social accounts..."}
                 className="w-full pl-10 bg-muted/50 border-border/50 focus:border-primary/50 focus:bg-muted/70 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </div>
+            </form>
           </div>
 
           <div className="flex items-center gap-2">

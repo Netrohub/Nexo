@@ -61,7 +61,9 @@ const ListSocialAccount = lazy(() => import("./pages/seller/ListSocialAccount"))
 const DisputeList = lazy(() => import("./pages/disputes/DisputeList"));
 const CreateDispute = lazy(() => import("./pages/disputes/CreateDispute"));
 const DisputeDetail = lazy(() => import("./pages/disputes/DisputeDetail"));
-const AdminDisputes = lazy(() => import("./pages/disputes/AdminDisputes"));
+
+// Admin pages (lazy loaded)
+const AdminDisputes = lazy(() => import("./pages/admin/AdminDisputes"));
 
 // Loading component
 const PageLoader = () => (
