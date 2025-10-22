@@ -81,9 +81,13 @@ const translations = {
       continue: "Continue",
       overview: "Overview",
       
+      // Email Verification
+      emailVerification: "Email Verification",
+      emailDescription: "Verify your email address with a confirmation link",
+      
       // Identity Verification
       identityVerification: "Identity Verification",
-      identityDescription: "Confirm your identity using a valid ID document",
+      identityDescription: "Verify your identity with government-issued ID",
       firstName: "First Name",
       lastName: "Last Name",
       dateOfBirth: "Date of Birth",
@@ -549,9 +553,13 @@ const translations = {
       continue: "متابعة",
       overview: "نظرة عامة",
       
+      // Email Verification
+      emailVerification: "التحقق من البريد الإلكتروني",
+      emailDescription: "تحقق من عنوان بريدك الإلكتروني برابط التأكيد",
+      
       // Identity Verification
       identityVerification: "التحقق من الهوية",
-      identityDescription: "تأكيد هويتك باستخدام وثيقة هوية صالحة",
+      identityDescription: "تحقق من هويتك باستخدام هوية حكومية صالحة",
       firstName: "الاسم الأول",
       lastName: "اسم العائلة",
       dateOfBirth: "تاريخ الميلاد",
