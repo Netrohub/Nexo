@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, ShoppingCart, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,9 +24,43 @@ const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const { data: cart } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
+  const [avatar, setAvatar] = useState<string>("");
 
   // Get accurate cart count
   const cartCount = cart?.items?.length || 0;
+
+  // Load avatar from localStorage
+  useEffect(() => {
+    const savedAvatar = localStorage.getItem('user_avatar');
+    if (savedAvatar) {
+      setAvatar(savedAvatar);
+    } else {
+      setAvatar(user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=user");
+    }
+
+    // Listen for avatar changes (when user uploads new avatar)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user_avatar' && e.newValue) {
+        setAvatar(e.newValue);
+      }
+    };
+
+    // Custom event for same-tab avatar updates
+    const handleAvatarUpdate = () => {
+      const updatedAvatar = localStorage.getItem('user_avatar');
+      if (updatedAvatar) {
+        setAvatar(updatedAvatar);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('avatarUpdated', handleAvatarUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('avatarUpdated', handleAvatarUpdate);
+    };
+  }, [user?.avatar]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,7 +177,7 @@ const Navbar = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.avatar || ""} alt={user?.name || ""} />
+                        <AvatarImage src={avatar || user?.avatar || ""} alt={user?.name || ""} />
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {user?.name?.charAt(0).toUpperCase() || "U"}
                         </AvatarFallback>

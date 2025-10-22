@@ -77,6 +77,9 @@ const Profile = () => {
           // Save to backend (in mock mode, just localStorage)
           localStorage.setItem('user_avatar', newAvatar);
           
+          // Dispatch custom event to notify Navbar about avatar change
+          window.dispatchEvent(new Event('avatarUpdated'));
+          
           toast({
             title: "Avatar updated!",
             description: "Your profile picture has been saved successfully.",
