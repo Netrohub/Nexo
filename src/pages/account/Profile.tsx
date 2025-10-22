@@ -13,8 +13,27 @@ import {
   Upload,
   Save
 } from "lucide-react";
+import { useState, useRef } from "react";
 
 const Profile = () => {
+  const [avatar, setAvatar] = useState<string>("https://api.dicebear.com/7.x/avataaars/svg?seed=user");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setAvatar(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <AccountLayout>
       <div className="space-y-6">
@@ -31,11 +50,15 @@ const Profile = () => {
           <h2 className="text-xl font-bold text-foreground mb-6">Profile Picture</h2>
           <div className="flex items-center gap-6">
             <Avatar className="h-24 w-24 border-2 border-primary/30">
-              <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
+              <AvatarImage src={avatar} />
               <AvatarFallback>UN</AvatarFallback>
             </Avatar>
             <div className="space-y-2">
-              <Button variant="outline" className="glass-card border-border/50">
+              <Button 
+                variant="outline" 
+                className="glass-card border-border/50"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <Upload className="h-4 w-4 mr-2" />
                 Upload New Photo
               </Button>
@@ -202,6 +225,14 @@ const Profile = () => {
           </div>
         </Card>
 
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleAvatarUpload}
+          className="hidden"
+        />
       </div>
     </AccountLayout>
   );

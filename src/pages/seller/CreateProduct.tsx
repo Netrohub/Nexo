@@ -12,10 +12,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Upload, X, Plus, Save } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const CreateProduct = () => {
   const [images, setImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            setImages(prev => [...prev, e.target.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
 
   return (
     <SellerLayout>
@@ -150,7 +172,7 @@ const CreateProduct = () => {
                     <img src={image} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
                     <button
                       type="button"
-                      onClick={() => setImages(images.filter((_, i) => i !== index))}
+                      onClick={() => removeImage(index)}
                       className="absolute top-2 right-2 p-1 rounded-full bg-destructive/90 text-white opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <X className="h-4 w-4" />
@@ -161,6 +183,7 @@ const CreateProduct = () => {
                 {images.length < 6 && (
                   <button
                     type="button"
+                    onClick={() => fileInputRef.current?.click()}
                     className="aspect-square rounded-lg glass-card border-2 border-dashed border-border/50 hover:border-primary/50 transition-colors flex flex-col items-center justify-center gap-2 text-foreground/60 hover:text-primary"
                   >
                     <Upload className="h-8 w-8" />
@@ -218,6 +241,16 @@ const CreateProduct = () => {
             </div>
           </Card>
         </form>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleImageUpload}
+          className="hidden"
+        />
       </div>
     </SellerLayout>
   );
