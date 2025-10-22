@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import AccountLayout from "@/components/AccountLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,22 +18,76 @@ import {
   ArrowLeft
 } from "lucide-react";
 
-const OrderDetail = () => {
-  const { id } = useParams();
-
-  // Mock order data - in production, fetch from API using the id
-  const order = {
-    id: id || "ORD-001",
+// Mock orders database - same as Orders.tsx
+const ordersDatabase = [
+  {
+    id: "ORD-001",
+    product: "Steam Account - 200+ Games Library",
+    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80",
+    seller: "ProGamer_Elite",
+    price: 449.99,
     status: "completed",
     date: "2024-01-20",
-    total: 449.99,
+    deliveryDate: "2024-01-20",
+  },
+  {
+    id: "ORD-002",
+    product: "Instagram Account - 50K Followers",
+    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&q=80",
+    seller: "SocialKing",
+    price: 299.99,
+    status: "pending",
+    date: "2024-01-19",
+    deliveryDate: null,
+  },
+  {
+    id: "ORD-003",
+    product: "PlayStation Plus Premium - 2 Years",
+    image: "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=400&q=80",
+    seller: "GameMaster_X",
+    price: 349.99,
+    status: "completed",
+    date: "2024-01-18",
+    deliveryDate: "2024-01-18",
+  },
+  {
+    id: "ORD-004",
+    product: "Epic Games - Fortnite Rare Skins",
+    image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80",
+    seller: "AccountKing",
+    price: 799.99,
+    status: "cancelled",
+    date: "2024-01-15",
+    deliveryDate: null,
+  },
+];
+
+const OrderDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  // Find the specific order by ID
+  const orderData = ordersDatabase.find(o => o.id === id);
+
+  // If order not found, redirect to orders page
+  if (!orderData) {
+    navigate('/account/orders');
+    return null;
+  }
+
+  // Build detailed order object from found data
+  const order = {
+    id: orderData.id,
+    status: orderData.status,
+    date: orderData.date,
+    total: orderData.price,
     items: [
       {
         id: 1,
-        name: "Steam Account - 200+ Games",
-        price: 449.99,
+        name: orderData.product,
+        price: orderData.price,
         quantity: 1,
-        image: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400&q=80",
+        image: orderData.image,
       }
     ],
     shipping: {
@@ -47,9 +101,9 @@ const OrderDetail = () => {
       method: "Credit Card",
       last4: "4242"
     },
-    tracking: "1Z999AA10123456784",
+    tracking: orderData.deliveryDate ? `1Z999AA10${orderData.id.replace('ORD-', '')}` : null,
     seller: {
-      name: "GameVault Pro",
+      name: orderData.seller,
       rating: 4.8,
       reviews: 1234
     }
