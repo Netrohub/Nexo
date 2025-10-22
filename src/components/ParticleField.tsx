@@ -30,7 +30,8 @@ const ParticleField = () => {
 
     // Create particles
     const particles: Particle[] = [];
-    const particleCount = 50;
+    // Reduce particle count on mobile for better performance
+    const particleCount = window.innerWidth < 768 ? 25 : 50;
     const colors = [
       'rgba(138, 117, 255, 0.6)', // primary
       'rgba(168, 85, 247, 0.6)',  // accent
@@ -50,13 +51,29 @@ const ParticleField = () => {
       });
     }
 
-    // Mouse interaction
+    // Mouse and touch interaction
     const mouse = { x: 0, y: 0 };
     const handleMouseMove = (e: MouseEvent) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
     };
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      }
+    };
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      }
+    };
+    
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
 
     // Animation loop
     let animationFrameId: number;
@@ -72,13 +89,15 @@ const ParticleField = () => {
         if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
         if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
 
-        // Mouse interaction
+        // Mouse/touch interaction
         const dx = mouse.x - particle.x;
         const dy = mouse.y - particle.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        if (distance < 150) {
-          const force = (150 - distance) / 150;
+        // Adjust interaction distance for mobile
+        const interactionDistance = window.innerWidth < 768 ? 200 : 150;
+        if (distance < interactionDistance) {
+          const force = (interactionDistance - distance) / interactionDistance;
           particle.vx -= (dx / distance) * force * 0.1;
           particle.vy -= (dy / distance) * force * 0.1;
         }
@@ -115,6 +134,8 @@ const ParticleField = () => {
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchstart', handleTouchStart);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
