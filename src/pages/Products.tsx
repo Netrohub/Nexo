@@ -121,11 +121,8 @@ const products = [
 
 const categories = [
   "All Products",
-  "Social Media",
-  "Gaming",
-  "Digital Services",
-  "Software",
-  "Entertainment",
+  "Social Accounts",
+  "Gaming Accounts",
 ];
 
 const priceRanges = [
@@ -142,6 +139,8 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState("all-products");
   const [selectedPriceRange, setSelectedPriceRange] = useState("all-prices");
   const [sortBy, setSortBy] = useState("featured");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFilters, setShowFilters] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -263,9 +262,14 @@ const Products = () => {
             <div className="mb-8 glass-card p-4 rounded-lg">
               <div className="flex flex-wrap gap-4 items-center justify-between">
                 <div className="flex flex-wrap gap-3 items-center">
-                  <Button variant="outline" size="sm" className="glass-card border-primary/30">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="glass-card border-primary/30"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    {t('filters')}
+                    {t('filters')} {showFilters ? '▼' : '▶'}
                   </Button>
                   
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -310,10 +314,20 @@ const Products = () => {
                   </Select>
 
                   <div className="hidden md:flex gap-2">
-                    <Button size="icon" variant="outline" className="glass-card border-primary/50">
+                    <Button 
+                      size="icon" 
+                      variant="outline" 
+                      className={`glass-card ${viewMode === 'grid' ? 'border-primary bg-primary/10' : 'border-primary/30'}`}
+                      onClick={() => setViewMode('grid')}
+                    >
                       <Grid3x3 className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost">
+                    <Button 
+                      size="icon" 
+                      variant="outline"
+                      className={`glass-card ${viewMode === 'list' ? 'border-primary bg-primary/10' : 'border-primary/30'}`}
+                      onClick={() => setViewMode('list')}
+                    >
                       <List className="h-4 w-4" />
                     </Button>
                   </div>
@@ -364,7 +378,9 @@ const Products = () => {
                 <p className="text-foreground/60 mt-2">Please try again later</p>
               </div>
             ) : productsData && productsData.data.length > 0 ? (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className={viewMode === 'grid' 
+                ? "grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
+                : "grid gap-4 grid-cols-1"}>
                 {productsData.data.map((product) => (
                   <ProductCard 
                     key={product.id} 
