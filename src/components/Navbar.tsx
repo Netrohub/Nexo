@@ -114,6 +114,18 @@ const Navbar = () => {
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
             
+            {/* Sell Button - Mobile Only */}
+            <Button 
+              asChild 
+              variant="outline" 
+              size="sm" 
+              className="md:hidden glass-card border-primary/30 hover:bg-primary/10 hover:text-primary transition-colors"
+            >
+              <Link to="/seller/onboarding">
+                <span className="text-sm font-medium">Sell</span>
+              </Link>
+            </Button>
+            
             {isAuthenticated ? (
               <>
                 <Button asChild variant="ghost" size="icon" className="relative hover:bg-primary/10 hover:text-primary transition-colors">
