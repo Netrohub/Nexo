@@ -22,6 +22,106 @@ const mockUser: User = {
   updated_at: new Date().toISOString(),
 };
 
+// Mock members data
+const mockMembers: User[] = [
+  {
+    id: 1,
+    name: 'John Doe',
+    email: 'john@nxoland.com',
+    email_verified_at: new Date('2024-01-15').toISOString(),
+    phone: '+966501234567',
+    phone_verified_at: new Date('2024-01-15').toISOString(),
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+    roles: ['customer', 'seller'],
+    created_at: new Date('2024-01-15').toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 2,
+    name: 'Sarah Johnson',
+    email: 'sarah@nxoland.com',
+    email_verified_at: new Date('2024-02-20').toISOString(),
+    phone: '+971501234567',
+    phone_verified_at: new Date('2024-02-20').toISOString(),
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
+    roles: ['customer', 'seller'],
+    created_at: new Date('2024-02-20').toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 3,
+    name: 'Ahmed Hassan',
+    email: 'ahmed@nxoland.com',
+    email_verified_at: new Date('2024-03-10').toISOString(),
+    phone: '+201012345678',
+    phone_verified_at: new Date('2024-03-10').toISOString(),
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed',
+    roles: ['customer'],
+    created_at: new Date('2024-03-10').toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 4,
+    name: 'Layla Ibrahim',
+    email: 'layla@nxoland.com',
+    email_verified_at: new Date('2024-01-25').toISOString(),
+    phone: '+962791234567',
+    phone_verified_at: new Date('2024-01-25').toISOString(),
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Layla',
+    roles: ['customer'],
+    created_at: new Date('2024-01-25').toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 5,
+    name: 'Omar Ali',
+    email: 'omar@nxoland.com',
+    email_verified_at: new Date('2024-02-05').toISOString(),
+    phone: '+966551234567',
+    phone_verified_at: new Date('2024-02-05').toISOString(),
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Omar',
+    roles: ['customer', 'seller'],
+    created_at: new Date('2024-02-05').toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 6,
+    name: 'Fatima Youssef',
+    email: 'fatima@nxoland.com',
+    email_verified_at: new Date('2024-03-15').toISOString(),
+    phone: '+212661234567',
+    phone_verified_at: new Date('2024-03-15').toISOString(),
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima',
+    roles: ['customer'],
+    created_at: new Date('2024-03-15').toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 7,
+    name: 'Khaled Mahmoud',
+    email: 'khaled@nxoland.com',
+    email_verified_at: new Date('2024-01-30').toISOString(),
+    phone: '+9611234567',
+    phone_verified_at: new Date('2024-01-30').toISOString(),
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Khaled',
+    roles: ['customer', 'seller'],
+    created_at: new Date('2024-01-30').toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 8,
+    name: 'Maryam Al-Saud',
+    email: 'maryam@nxoland.com',
+    email_verified_at: new Date('2024-02-12').toISOString(),
+    phone: '+966561234567',
+    phone_verified_at: new Date('2024-02-12').toISOString(),
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maryam',
+    roles: ['customer', 'seller'],
+    created_at: new Date('2024-02-12').toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
 // Mock products
 const mockProducts: Product[] = [
   {
@@ -298,5 +398,12 @@ export const mockApi = {
     mockUser.kycCompletedAt = new Date().toISOString();
     
     console.log('✅ Mock API: KYC verification completed successfully');
+  },
+
+  // Members
+  async getMembers() {
+    await delay();
+    console.log('🎭 Mock API: Get members', mockMembers.length, 'members');
+    return mockMembers;
   },
 };

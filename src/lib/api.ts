@@ -598,6 +598,17 @@ class ApiClient {
     return response.data;
   }
 
+  // Members
+  async getMembers(): Promise<User[]> {
+    if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API for members');
+      return mockApi.getMembers();
+    }
+    
+    const response = await this.request<User[]>('/members');
+    return response.data;
+  }
+
   // Utility Methods
   setToken(token: string): void {
     this.token = token;
@@ -674,4 +685,7 @@ export const queryKeys = {
   sellerOrders: () => [...queryKeys.seller, 'orders'] as const,
   sellerPayouts: () => [...queryKeys.seller, 'payouts'] as const,
   sellerNotifications: () => [...queryKeys.seller, 'notifications'] as const,
+  
+  // Members
+  members: ['members'] as const,
 };
