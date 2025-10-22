@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import AnalyticsProvider from "./components/AnalyticsProvider";
@@ -40,6 +40,7 @@ const Dashboard = lazy(() => import("./pages/account/Dashboard"));
 const Profile = lazy(() => import("./pages/account/Profile"));
 const Wallet = lazy(() => import("./pages/account/Wallet"));
 const Orders = lazy(() => import("./pages/account/Orders"));
+const OrderDetail = lazy(() => import("./pages/account/OrderDetail"));
 const Notifications = lazy(() => import("./pages/account/Notifications"));
 const Billing = lazy(() => import("./pages/account/Billing"));
 const AccountWishlist = lazy(() => import("./pages/account/Wishlist"));
@@ -95,7 +96,7 @@ const App = () => (
         <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AnalyticsProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -124,6 +125,7 @@ const App = () => (
           <Route path="/account/wallet" element={<RequireAuth><Wallet /></RequireAuth>} />
           <Route path="/account/wishlist" element={<RequireAuth><AccountWishlist /></RequireAuth>} />
           <Route path="/account/orders" element={<RequireAuth><Orders /></RequireAuth>} />
+          <Route path="/account/orders/:id" element={<RequireAuth><OrderDetail /></RequireAuth>} />
           <Route path="/account/notifications" element={<RequireAuth><Notifications /></RequireAuth>} />
           <Route path="/account/billing" element={<RequireAuth><Billing /></RequireAuth>} />
           <Route path="/account/kyc" element={<RequireAuth><KYC /></RequireAuth>} />

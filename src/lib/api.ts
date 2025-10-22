@@ -385,11 +385,21 @@ class ApiClient {
 
   // Cart Methods
   async getCart(): Promise<Cart> {
+    if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API for cart');
+      return mockApi.getCart();
+    }
+    
     const response = await this.request<Cart>('/cart');
     return response.data;
   }
 
   async addToCart(productId: number, quantity: number = 1): Promise<void> {
+    if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API to add to cart');
+      return mockApi.addToCart(productId, quantity);
+    }
+    
     await this.request('/cart', {
       method: 'POST',
       body: JSON.stringify({ product_id: productId, quantity }),
@@ -397,6 +407,11 @@ class ApiClient {
   }
 
   async updateCartItem(itemId: number, quantity: number): Promise<void> {
+    if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API to update cart item');
+      return mockApi.updateCartItem(itemId, quantity);
+    }
+    
     await this.request(`/cart/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify({ quantity }),
@@ -404,6 +419,11 @@ class ApiClient {
   }
 
   async removeFromCart(itemId: number): Promise<void> {
+    if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API to remove from cart');
+      return mockApi.removeFromCart(itemId);
+    }
+    
     await this.request(`/cart/${itemId}`, { method: 'DELETE' });
   }
 
@@ -432,11 +452,21 @@ class ApiClient {
 
   // Wishlist Methods
   async getWishlist(): Promise<Product[]> {
+    if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API for wishlist');
+      return mockApi.getWishlist();
+    }
+    
     const response = await this.request<Product[]>('/wishlist');
     return response.data;
   }
 
   async addToWishlist(productId: number): Promise<void> {
+    if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API to add to wishlist');
+      return mockApi.addToWishlist(productId);
+    }
+    
     await this.request('/wishlist', {
       method: 'POST',
       body: JSON.stringify({ product_id: productId }),
@@ -444,6 +474,11 @@ class ApiClient {
   }
 
   async removeFromWishlist(productId: number): Promise<void> {
+    if (USE_MOCK_API) {
+      console.log('🎭 Using Mock API to remove from wishlist');
+      return mockApi.removeFromWishlist(productId);
+    }
+    
     await this.request(`/wishlist/${productId}`, { method: 'DELETE' });
   }
 
