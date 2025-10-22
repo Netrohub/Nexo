@@ -1,20 +1,38 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Starfield from "@/components/Starfield";
 import AccountLayout from "@/components/AccountLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/disputes/StatusBadge";
 import { MessageThread, Message } from "@/components/disputes/MessageThread";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send, AlertTriangle, Package, Image as ImageIcon } from "lucide-react";
-import { toast } from "sonner";
 
 const DisputeDetail = () => {
   const { id } = useParams();
+  const { toast } = useToast();
   const [newMessage, setNewMessage] = useState("");
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      sender: { name: "You", role: "buyer" },
+      content: "I purchased this account yesterday but the engagement rate is much lower than advertised. Can you please check?",
+      timestamp: "2 days ago",
+    },
+    {
+      id: "2",
+      sender: { name: "Digital Elite", role: "seller" },
+      content: "Hello, thank you for reaching out. Can you please provide more details about the engagement issues you're experiencing?",
+      timestamp: "1 day ago",
+    },
+    {
+      id: "3",
+      sender: { name: "You", role: "buyer" },
+      content: "I've attached screenshots showing the analytics. The engagement is around 2-3% but your listing stated 8-12%.",
+      timestamp: "1 day ago",
+    },
+  ]);
 
   // Mock dispute data
   const dispute = {
@@ -54,23 +72,41 @@ const DisputeDetail = () => {
   ]);
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      toast.success("Message sent successfully!");
-      setNewMessage("");
+    if (!newMessage.trim()) {
+      toast({
+        title: "Message is empty",
+        description: "Please type a message before sending.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    // Add message to thread
+    const newMsg: Message = {
+      id: Date.now().toString(),
+      sender: { name: "You", role: "buyer" },
+      content: newMessage,
+      timestamp: "Just now",
+    };
+    
+    setMessages([...messages, newMsg]);
+    setNewMessage("");
+    
+    toast({
+      title: "Message sent! 💬",
+      description: "Your message has been sent to the dispute thread.",
+    });
   };
 
   const handleEscalate = () => {
-    toast.success("Dispute escalated to admin review.");
+    toast({
+      title: "Escalated to admin",
+      description: "This dispute has been escalated for admin review.",
+    });
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      <Starfield />
-      <Navbar />
-
-      <main className="flex-1 relative z-10">
-        <AccountLayout>
+    <AccountLayout>
           <div className="space-y-6">
             {/* Back Button */}
             <Link to="/disputes">
@@ -185,11 +221,7 @@ const DisputeDetail = () => {
               </div>
             </Card>
           </div>
-        </AccountLayout>
-      </main>
-
-      <Footer />
-    </div>
+    </AccountLayout>
   );
 };
 

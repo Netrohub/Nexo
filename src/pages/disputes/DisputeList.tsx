@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Starfield from "@/components/Starfield";
 import AccountLayout from "@/components/AccountLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,12 +56,7 @@ const DisputeList = () => {
   const counts = getStatusCounts();
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      <Starfield />
-      <Navbar />
-
-      <main className="flex-1 relative z-10">
-        <AccountLayout>
+    <AccountLayout>
           <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -159,11 +151,7 @@ const DisputeList = () => {
               </TabsContent>
             </Tabs>
           </div>
-        </AccountLayout>
-      </main>
-
-      <Footer />
-    </div>
+    </AccountLayout>
   );
 };
 
