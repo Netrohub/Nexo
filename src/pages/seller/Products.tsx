@@ -1,9 +1,21 @@
+import { useState } from "react";
 import SellerLayout from "@/components/SellerLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   Plus, 
   Search, 
@@ -87,6 +99,53 @@ const getStatusBadge = (status: string) => {
 };
 
 const SellerProducts = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [productsList, setProductsList] = useState(products);
+
+  const handleView = (productId: string) => {
+    navigate(`/products/${productId}`);
+  };
+
+  const handleEdit = (productId: string) => {
+    navigate(`/seller/products/${productId}/edit`);
+  };
+
+  const handleDeleteClick = (productId: string) => {
+    setProductToDelete(productId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (productToDelete) {
+      // Remove product from list
+      setProductsList(prev => prev.filter(p => p.id !== productToDelete));
+      
+      toast({
+        title: "Product deleted",
+        description: "The product has been successfully deleted.",
+      });
+      
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+    }
+  };
+
+  const handleCreateProduct = () => {
+    // Redirect to onboarding instead of create
+    navigate("/seller/onboarding");
+  };
+
+  const filteredProducts = productsList.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = filterStatus === "all" || product.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+
   return (
     <SellerLayout>
       <div className="space-y-6">
@@ -98,12 +157,10 @@ const SellerProducts = () => {
             </h1>
             <p className="text-foreground/60">Manage your product listings</p>
           </div>
-          <Link to="/seller/products/create">
-            <Button className="btn-glow">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Product
-            </Button>
-          </Link>
+          <Button className="btn-glow" onClick={handleCreateProduct}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Product
+          </Button>
         </div>
 
         {/* Search and Filter */}
@@ -114,15 +171,29 @@ const SellerProducts = () => {
               <Input
                 placeholder="Search products..."
                 className="pl-10 glass-card border-border/50"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button variant="outline" className="glass-card border-border/50">
+            <Button 
+              variant="outline" 
+              className={`glass-card border-border/50 ${filterStatus === 'all' ? 'bg-primary/10 text-primary' : ''}`}
+              onClick={() => setFilterStatus('all')}
+            >
               All Products
             </Button>
-            <Button variant="outline" className="glass-card border-border/50">
+            <Button 
+              variant="outline" 
+              className={`glass-card border-border/50 ${filterStatus === 'active' ? 'bg-primary/10 text-primary' : ''}`}
+              onClick={() => setFilterStatus('active')}
+            >
               Active
             </Button>
-            <Button variant="outline" className="glass-card border-border/50">
+            <Button 
+              variant="outline" 
+              className={`glass-card border-border/50 ${filterStatus === 'draft' ? 'bg-primary/10 text-primary' : ''}`}
+              onClick={() => setFilterStatus('draft')}
+            >
               Draft
             </Button>
           </div>
@@ -130,7 +201,7 @@ const SellerProducts = () => {
 
         {/* Products List */}
         <div className="space-y-4">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <Card key={product.id} className="glass-card p-6">
               <div className="flex gap-6">
                 {/* Product Image */}
@@ -174,24 +245,32 @@ const SellerProducts = () => {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="glass-card border-border/50">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="glass-card border-border/50"
+                      onClick={() => handleView(product.id)}
+                    >
                       <Eye className="h-4 w-4 mr-2" />
                       View
                     </Button>
-                    <Button size="sm" variant="outline" className="glass-card border-border/50">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="glass-card border-border/50"
+                      onClick={() => handleEdit(product.id)}
+                    >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="glass-card border-border/50 text-destructive hover:text-destructive"
+                      className="glass-card border-border/50 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDeleteClick(product.id)}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete
-                    </Button>
-                    <Button size="sm" variant="ghost">
-                      <MoreVertical className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -200,24 +279,50 @@ const SellerProducts = () => {
           ))}
         </div>
 
-        {/* Empty State Alternative */}
-        {products.length === 0 && (
+        {/* Empty State */}
+        {filteredProducts.length === 0 && (
           <Card className="glass-card p-12 text-center">
             <div className="inline-flex p-4 rounded-xl bg-primary/10 border border-primary/20 mb-4">
               <Plus className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No products yet</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              {searchQuery ? 'No products found' : 'No products yet'}
+            </h3>
             <p className="text-foreground/60 mb-6">
-              Create your first product to start selling
+              {searchQuery 
+                ? 'Try adjusting your search or filters' 
+                : 'Create your first product to start selling'}
             </p>
-            <Link to="/seller/products/create">
-              <Button className="btn-glow">
+            {!searchQuery && (
+              <Button className="btn-glow" onClick={handleCreateProduct}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Product
               </Button>
-            </Link>
+            )}
           </Card>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent className="glass-card border-border/50">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Product?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the product
+                from your listings.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </SellerLayout>
   );
