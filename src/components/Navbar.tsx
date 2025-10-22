@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/hooks/useApi";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +22,11 @@ const Navbar = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
+  const { data: cart } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Get accurate cart count
+  const cartCount = cart?.items?.length || 0;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,9 +119,11 @@ const Navbar = () => {
                 <Button asChild variant="ghost" size="icon" className="relative hover:bg-primary/10 hover:text-primary transition-colors">
                   <Link to="/cart">
                     <ShoppingCart className="h-5 w-5" />
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full gradient-primary text-[10px] font-bold text-primary-foreground shadow-lg">
-                      3
-                    </span>
+                    {cartCount > 0 && (
+                      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full gradient-primary text-[10px] font-bold text-primary-foreground shadow-lg">
+                        {cartCount}
+                      </span>
+                    )}
                   </Link>
                 </Button>
                 
