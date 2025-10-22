@@ -1,8 +1,19 @@
+import { useState } from "react";
 import AccountLayout from "@/components/AccountLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Wallet as WalletIcon, 
   Plus, 
@@ -50,8 +61,95 @@ const transactions = [
 ];
 
 const Wallet = () => {
-  const balance = 1249.50;
-  const pendingBalance = 599.99;
+  const { toast } = useToast();
+  const [balance, setBalance] = useState(1249.50);
+  const [pendingBalance] = useState(599.99);
+  const [addFundsOpen, setAddFundsOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+
+  const handleAddFunds = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid amount to add.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Processing...",
+        description: "Adding funds to your wallet.",
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const addAmount = parseFloat(amount);
+      setBalance(prev => prev + addAmount);
+      
+      toast({
+        title: "Funds added! 💰",
+        description: `$${addAmount.toFixed(2)} has been added to your wallet.`,
+      });
+      
+      setAddFundsOpen(false);
+      setAmount("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add funds. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid amount to withdraw.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const withdrawAmount = parseFloat(amount);
+    if (withdrawAmount > balance) {
+      toast({
+        title: "Insufficient balance",
+        description: "You don't have enough balance to withdraw this amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Processing...",
+        description: "Processing your withdrawal request.",
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setBalance(prev => prev - withdrawAmount);
+      
+      toast({
+        title: "Withdrawal successful! 💸",
+        description: `$${withdrawAmount.toFixed(2)} will be transferred to your bank account in 1-3 business days.`,
+      });
+      
+      setWithdrawOpen(false);
+      setAmount("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process withdrawal. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <AccountLayout>
@@ -78,11 +176,20 @@ const Wallet = () => {
                 ${balance.toFixed(2)}
               </p>
               <div className="flex gap-2">
-                <Button size="sm" className="btn-glow">
+                <Button 
+                  size="sm" 
+                  className="btn-glow"
+                  onClick={() => setAddFundsOpen(true)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Funds
                 </Button>
-                <Button size="sm" variant="outline" className="glass-card border-border/50">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="glass-card border-border/50"
+                  onClick={() => setWithdrawOpen(true)}
+                >
                   <ArrowUpRight className="h-4 w-4 mr-2" />
                   Withdraw
                 </Button>
@@ -213,6 +320,81 @@ const Wallet = () => {
             ))}
           </div>
         </Card>
+
+        {/* Add Funds Dialog */}
+        <Dialog open={addFundsOpen} onOpenChange={setAddFundsOpen}>
+          <DialogContent className="glass-card border-border/50">
+            <DialogHeader>
+              <DialogTitle>Add Funds to Wallet</DialogTitle>
+              <DialogDescription>
+                Enter the amount you want to add to your wallet balance.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="addAmount">Amount (USD)</Label>
+                <Input
+                  id="addAmount"
+                  type="number"
+                  placeholder="100.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="glass-card border-border/50"
+                  min="1"
+                  step="0.01"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddFundsOpen(false)}>
+                Cancel
+              </Button>
+              <Button className="btn-glow" onClick={handleAddFunds}>
+                Add Funds
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Withdraw Dialog */}
+        <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+          <DialogContent className="glass-card border-border/50">
+            <DialogHeader>
+              <DialogTitle>Withdraw Funds</DialogTitle>
+              <DialogDescription>
+                Enter the amount you want to withdraw to your bank account.
+                Available balance: ${balance.toFixed(2)}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="withdrawAmount">Amount (USD)</Label>
+                <Input
+                  id="withdrawAmount"
+                  type="number"
+                  placeholder="100.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="glass-card border-border/50"
+                  min="1"
+                  step="0.01"
+                  max={balance}
+                />
+                <p className="text-xs text-foreground/50">
+                  Funds will be transferred in 1-3 business days
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setWithdrawOpen(false)}>
+                Cancel
+              </Button>
+              <Button className="btn-glow" onClick={handleWithdraw}>
+                Withdraw
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AccountLayout>
   );
