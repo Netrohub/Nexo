@@ -1,17 +1,22 @@
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import AccountLayout from "@/components/AccountLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Package, 
   Search, 
   Eye,
-  Download,
   MessageSquare,
   CheckCircle2,
   Clock,
-  XCircle
+  XCircle,
+  Star,
+  MapPin
 } from "lucide-react";
 
 const orders = [
@@ -84,6 +89,52 @@ const getStatusColor = (status: string) => {
 };
 
 const Orders = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTab, setSelectedTab] = useState("all");
+
+  const handleViewDetails = (orderId: string) => {
+    navigate(`/account/orders/${orderId}`);
+  };
+
+  const handleContactSeller = (seller: string) => {
+    toast({
+      title: "Contact Seller",
+      description: `Opening chat with ${seller}...`,
+    });
+    // TODO: Open chat/messaging system
+  };
+
+  const handleLeaveReview = (orderId: string) => {
+    toast({
+      title: "Leave Review",
+      description: "Opening review form...",
+    });
+    // TODO: Open review modal/page
+  };
+
+  const handleTrackOrder = (orderId: string) => {
+    toast({
+      title: "Track Order",
+      description: "Opening order tracking...",
+    });
+    // TODO: Show tracking information
+  };
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = order.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         order.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTab = selectedTab === "all" || order.status === selectedTab;
+    return matchesSearch && matchesTab;
+  });
+
+  const orderCounts = {
+    all: orders.length,
+    completed: orders.filter(o => o.status === "completed").length,
+    pending: orders.filter(o => o.status === "pending").length,
+  };
+
   return (
     <AccountLayout>
       <div className="space-y-6">
@@ -97,31 +148,32 @@ const Orders = () => {
           </div>
         </div>
 
-        {/* Search and Filter */}
+        {/* Search */}
         <Card className="glass-card p-4">
-          <div className="flex gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
-              <Input
-                placeholder="Search orders..."
-                className="pl-10 glass-card border-border/50"
-              />
-            </div>
-            <Button variant="outline" className="glass-card border-border/50">
-              All Orders
-            </Button>
-            <Button variant="outline" className="glass-card border-border/50">
-              Completed
-            </Button>
-            <Button variant="outline" className="glass-card border-border/50">
-              Pending
-            </Button>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/70" />
+            <Input
+              placeholder="Search orders..."
+              className="pl-10 glass-card border-border/50"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </Card>
 
+        {/* Status Tabs */}
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <TabsList className="glass-card border border-border/50">
+            <TabsTrigger value="all">All Orders ({orderCounts.all})</TabsTrigger>
+            <TabsTrigger value="completed">Completed ({orderCounts.completed})</TabsTrigger>
+            <TabsTrigger value="pending">Pending ({orderCounts.pending})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={selectedTab} className="mt-6">
+
         {/* Orders List */}
         <div className="space-y-4">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <Card key={order.id} className="glass-card p-6">
               <div className="flex gap-6">
                 {/* Product Image */}
@@ -161,31 +213,46 @@ const Orders = () => {
 
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2">
-                    {order.status === "completed" && (
-                      <>
-                        <Button size="sm" className="btn-glow">
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
-                        <Button size="sm" variant="outline" className="glass-card border-border/50">
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </>
-                    )}
-                    {order.status === "pending" && (
-                      <Button size="sm" variant="outline" className="glass-card border-border/50">
-                        <Clock className="h-4 w-4 mr-2" />
-                        Track Order
-                      </Button>
-                    )}
-                    <Button size="sm" variant="outline" className="glass-card border-border/50">
+                    <Button 
+                      size="sm" 
+                      className="btn-glow"
+                      onClick={() => handleViewDetails(order.id)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                    
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="glass-card border-border/50"
+                      onClick={() => handleContactSeller(order.seller)}
+                    >
                       <MessageSquare className="h-4 w-4 mr-2" />
                       Contact Seller
                     </Button>
+
                     {order.status === "completed" && (
-                      <Button size="sm" variant="outline" className="glass-card border-border/50">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="glass-card border-border/50"
+                        onClick={() => handleLeaveReview(order.id)}
+                      >
+                        <Star className="h-4 w-4 mr-2" />
                         Leave Review
+                      </Button>
+                    )}
+
+                    {order.status === "pending" && (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="glass-card border-border/50"
+                        onClick={() => handleTrackOrder(order.id)}
+                      >
+                        <MapPin className="h-4 w-4 mr-2" />
+                        Track Order
                       </Button>
                     )}
                   </div>
@@ -195,21 +262,30 @@ const Orders = () => {
           ))}
         </div>
 
-        {/* Empty State Alternative */}
-        {orders.length === 0 && (
+        {/* Empty State */}
+        {filteredOrders.length === 0 && (
           <Card className="glass-card p-12 text-center">
             <div className="inline-flex p-4 rounded-xl bg-primary/10 border border-primary/20 mb-4">
               <Package className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No orders yet</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              {searchQuery ? 'No orders found' : 'No orders yet'}
+            </h3>
             <p className="text-foreground/60 mb-6">
-              Start shopping to see your orders here
+              {searchQuery 
+                ? 'Try adjusting your search or filters' 
+                : 'Start shopping to see your orders here'}
             </p>
-            <Button className="btn-glow">
-              Browse Products
-            </Button>
+            {!searchQuery && (
+              <Button className="btn-glow" asChild>
+                <Link to="/products">Browse Products</Link>
+              </Button>
+            )}
           </Card>
         )}
+
+        </TabsContent>
+        </Tabs>
       </div>
     </AccountLayout>
   );
