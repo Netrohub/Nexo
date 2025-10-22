@@ -12,11 +12,9 @@ export interface KYCStatus {
   id: string;
   status: 'pending' | 'approved' | 'rejected' | 'incomplete';
   steps: {
-    identity: boolean;
-    address: boolean;
+    email: boolean;
     phone: boolean;
-    documents: boolean;
-    bankAccount: boolean;
+    identity: boolean;
   };
   submittedAt?: string;
   reviewedAt?: string;
@@ -30,13 +28,11 @@ const KYCStatusComponent: React.FC = () => {
   // Mock KYC status - in real app, this would come from API
   const kycStatus: KYCStatus = {
     id: 'kyc-001',
-    status: 'incomplete',
+    status: user?.emailVerified && user?.phoneVerified && user?.kycStatus === 'verified' ? 'approved' : 'incomplete',
     steps: {
-      identity: true,
-      address: false,
-      phone: true,
-      documents: false,
-      bankAccount: false,
+      email: user?.emailVerified || false,
+      phone: user?.phoneVerified || false,
+      identity: user?.kycStatus === 'verified' || false,
     },
     submittedAt: undefined,
     reviewedAt: undefined,
@@ -74,38 +70,24 @@ const KYCStatusComponent: React.FC = () => {
 
   const kycSteps = [
     {
-      key: 'identity',
-      title: t('kyc.identityVerification'),
-      description: t('kyc.identityDescription'),
-      completed: kycStatus.steps.identity,
-      required: true,
-    },
-    {
-      key: 'address',
-      title: t('kyc.addressVerification'),
-      description: t('kyc.addressDescription'),
-      completed: kycStatus.steps.address,
+      key: 'email',
+      title: t('Email Verification'),
+      description: t('Verify your email address with a confirmation link'),
+      completed: kycStatus.steps.email,
       required: true,
     },
     {
       key: 'phone',
-      title: t('kyc.phoneVerification'),
-      description: t('kyc.phoneDescription'),
+      title: t('Phone Verification'),
+      description: t('Verify your phone number with a verification code'),
       completed: kycStatus.steps.phone,
       required: true,
     },
     {
-      key: 'documents',
-      title: t('kyc.documentUpload'),
-      description: t('kyc.documentDescription'),
-      completed: kycStatus.steps.documents,
-      required: true,
-    },
-    {
-      key: 'bankAccount',
-      title: t('kyc.bankAccountVerification'),
-      description: t('kyc.bankAccountDescription'),
-      completed: kycStatus.steps.bankAccount,
+      key: 'identity',
+      title: t('Identity Verification'),
+      description: t('Verify your identity with Persona'),
+      completed: kycStatus.steps.identity,
       required: true,
     },
   ];

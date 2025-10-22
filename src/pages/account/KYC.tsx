@@ -3,8 +3,22 @@ import { Link } from 'react-router-dom';
 import AccountLayout from '@/components/AccountLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { 
   Shield, 
   CheckCircle, 
@@ -13,16 +27,60 @@ import {
   User,
   ArrowLeft,
   ArrowRight,
-  ExternalLink
+  ExternalLink,
+  ChevronDown,
+  Search
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+const countries = [
+  { code: 'US', name: 'United States', dialCode: '+1', flag: '🇺🇸' },
+  { code: 'GB', name: 'United Kingdom', dialCode: '+44', flag: '🇬🇧' },
+  { code: 'CA', name: 'Canada', dialCode: '+1', flag: '🇨🇦' },
+  { code: 'AU', name: 'Australia', dialCode: '+61', flag: '🇦🇺' },
+  { code: 'DE', name: 'Germany', dialCode: '+49', flag: '🇩🇪' },
+  { code: 'FR', name: 'France', dialCode: '+33', flag: '🇫🇷' },
+  { code: 'IT', name: 'Italy', dialCode: '+39', flag: '🇮🇹' },
+  { code: 'ES', name: 'Spain', dialCode: '+34', flag: '🇪🇸' },
+  { code: 'NL', name: 'Netherlands', dialCode: '+31', flag: '🇳🇱' },
+  { code: 'SE', name: 'Sweden', dialCode: '+46', flag: '🇸🇪' },
+  { code: 'NO', name: 'Norway', dialCode: '+47', flag: '🇳🇴' },
+  { code: 'DK', name: 'Denmark', dialCode: '+45', flag: '🇩🇰' },
+  { code: 'FI', name: 'Finland', dialCode: '+358', flag: '🇫🇮' },
+  { code: 'PL', name: 'Poland', dialCode: '+48', flag: '🇵🇱' },
+  { code: 'CZ', name: 'Czech Republic', dialCode: '+420', flag: '🇨🇿' },
+  { code: 'AT', name: 'Austria', dialCode: '+43', flag: '🇦🇹' },
+  { code: 'CH', name: 'Switzerland', dialCode: '+41', flag: '🇨🇭' },
+  { code: 'BE', name: 'Belgium', dialCode: '+32', flag: '🇧🇪' },
+  { code: 'IE', name: 'Ireland', dialCode: '+353', flag: '🇮🇪' },
+  { code: 'PT', name: 'Portugal', dialCode: '+351', flag: '🇵🇹' },
+  { code: 'GR', name: 'Greece', dialCode: '+30', flag: '🇬🇷' },
+  { code: 'JP', name: 'Japan', dialCode: '+81', flag: '🇯🇵' },
+  { code: 'KR', name: 'South Korea', dialCode: '+82', flag: '🇰🇷' },
+  { code: 'CN', name: 'China', dialCode: '+86', flag: '🇨🇳' },
+  { code: 'IN', name: 'India', dialCode: '+91', flag: '🇮🇳' },
+  { code: 'SG', name: 'Singapore', dialCode: '+65', flag: '🇸🇬' },
+  { code: 'AE', name: 'United Arab Emirates', dialCode: '+971', flag: '🇦🇪' },
+  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', flag: '🇸🇦' },
+  { code: 'ZA', name: 'South Africa', dialCode: '+27', flag: '🇿🇦' },
+  { code: 'BR', name: 'Brazil', dialCode: '+55', flag: '🇧🇷' },
+  { code: 'MX', name: 'Mexico', dialCode: '+52', flag: '🇲🇽' },
+  { code: 'AR', name: 'Argentina', dialCode: '+54', flag: '🇦🇷' },
+  { code: 'CL', name: 'Chile', dialCode: '+56', flag: '🇨🇱' },
+  { code: 'CO', name: 'Colombia', dialCode: '+57', flag: '🇨🇴' },
+  { code: 'NZ', name: 'New Zealand', dialCode: '+64', flag: '🇳🇿' },
+];
 
 const KYC = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationStatus, setVerificationStatus] = useState({
     email: user?.emailVerified || false,
     phone: user?.phoneVerified || false,
@@ -32,22 +90,22 @@ const KYC = () => {
   const steps = [
     {
       id: 1,
-      title: t('kyc.emailVerification'),
-      description: t('kyc.emailDescription'),
+      title: t('Email Verification'),
+      description: t('Verify your email address with a confirmation link'),
       icon: Mail,
       status: verificationStatus.email,
     },
     {
       id: 2,
-      title: t('kyc.phoneVerification'),
-      description: t('kyc.phoneDescription'),
+      title: t('Phone Verification'),
+      description: t('Verify your phone number with a verification code'),
       icon: Phone,
       status: verificationStatus.phone,
     },
     {
       id: 3,
-      title: t('kyc.identityVerification'),
-      description: t('kyc.identityDescription'),
+      title: t('Identity Verification'),
+      description: t('Verify your identity with Persona'),
       icon: User,
       status: verificationStatus.identity,
     },
@@ -57,46 +115,122 @@ const KYC = () => {
     return (currentStep / steps.length) * 100;
   };
 
+  const isKYCCompleted = () => {
+    return verificationStatus.email && verificationStatus.phone && verificationStatus.identity;
+  };
+
   const handleEmailVerification = async () => {
     try {
-      toast.loading(t('kyc.sendingEmail'));
+      toast.loading(t('SendingEmail'));
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       setVerificationStatus(prev => ({ ...prev, email: true }));
-      toast.success(t('kyc.emailSent'));
+      toast.success(t('EmailSent'));
     } catch (error) {
-      toast.error(t('kyc.emailVerificationFailed'));
+      toast.error(t('Email Verification Failed'));
     }
   };
 
   const handlePhoneVerification = async () => {
+    if (!phoneNumber || phoneNumber.length < 7) {
+      toast.error('Please enter a valid phone number');
+      return;
+    }
+
     try {
-      toast.loading(t('kyc.sendingCode'));
+      toast.loading('Sending verification code...');
       
-      // Simulate API call
+      // Simulate API call with full phone number
+      const fullPhoneNumber = `${selectedCountry.dialCode} ${phoneNumber}`;
+      console.log('Sending SMS to:', fullPhoneNumber);
+      
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       setVerificationStatus(prev => ({ ...prev, phone: true }));
-      toast.success(t('kyc.phoneVerified'));
+      toast.success('Phone verification code sent!');
     } catch (error) {
-      toast.error(t('kyc.phoneVerificationFailed'));
+      toast.error('Phone Verification Failed');
     }
   };
 
   const handleIdentityVerification = async () => {
     try {
-      toast.loading(t('kyc.submittingVerification'));
+      toast.loading(t('SubmittingVerification'));
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       setVerificationStatus(prev => ({ ...prev, identity: true }));
-      toast.success(t('kyc.verificationSubmitted'));
+      toast.success(t('VerificationSubmitted'));
     } catch (error) {
-      toast.error(t('kyc.verificationFailed'));
+      toast.error(t('VrificationFailed'));
     }
+  };
+
+  const renderCompletionScreen = () => {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/10 flex items-center justify-center">
+            <CheckCircle className="h-10 w-10 text-green-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-4">
+            KYC Verification Complete!
+          </h2>
+          <p className="text-foreground/60 mb-8">
+            Congratulations! You have successfully completed all verification steps. You can now access all seller features on NXOLand.
+          </p>
+        </div>
+
+        <Card className="glass-card p-6 border-green-500/30 bg-green-500/5">
+          <div className="space-y-4">
+            <h3 className="font-semibold text-green-400 mb-4">All Verification Steps Completed</h3>
+            
+            <div className="space-y-3">
+              {steps.map((step) => (
+                <div key={step.id} className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-foreground">{step.title}</h4>
+                    <p className="text-sm text-foreground/60">{step.description}</p>
+                  </div>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                    Verified
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        <div className="flex gap-3">
+          <Button asChild className="flex-1 btn-glow">
+            <Link to="/seller/dashboard">
+              Go to Seller Dashboard
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="flex-1">
+            <Link to="/account/dashboard">
+              Back to Account
+            </Link>
+          </Button>
+        </div>
+
+        <Card className="glass-card p-6 border-primary/30">
+          <h3 className="font-semibold text-primary mb-4">What's Next?</h3>
+          <ul className="space-y-2 text-sm text-foreground/60">
+            <li>• Start listing your products and services</li>
+            <li>• Access advanced seller analytics</li>
+            <li>• Manage your orders and customers</li>
+            <li>• Set up your payment methods</li>
+            <li>• Build your seller reputation</li>
+          </ul>
+        </Card>
+      </div>
+    );
   };
 
   const renderStepContent = () => {
@@ -149,16 +283,72 @@ const KYC = () => {
                   <p className="text-sm text-foreground/60 mb-4">
                     We'll send a verification code to your phone number
                   </p>
-                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                    <p className="font-medium">{user?.phone || '+1 (555) 123-4567'}</p>
-                  </div>
                 </div>
                 
                 {!verificationStatus.phone ? (
-                  <Button onClick={handlePhoneVerification} className="w-full btn-glow">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Send Verification Code
-                  </Button>
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={countryOpen}
+                            className="w-[140px] justify-between"
+                          >
+                            <span className="flex items-center gap-2">
+                              <span>{selectedCountry.flag}</span>
+                              <span>{selectedCountry.dialCode}</span>
+                            </span>
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search country..." />
+                            <CommandList>
+                              <CommandEmpty>No country found.</CommandEmpty>
+                              <CommandGroup>
+                                {countries.map((country) => (
+                                  <CommandItem
+                                    key={country.code}
+                                    value={`${country.name} ${country.dialCode} ${country.code}`}
+                                    onSelect={() => {
+                                      setSelectedCountry(country);
+                                      setCountryOpen(false);
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span>{country.flag}</span>
+                                      <span>{country.name}</span>
+                                      <span className="text-muted-foreground">{country.dialCode}</span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      
+                      <Input
+                        type="tel"
+                        placeholder="Phone number"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="flex-1"
+                      />
+                    </div>
+                    
+                    <Button 
+                      onClick={handlePhoneVerification} 
+                      className="w-full btn-glow"
+                      disabled={!phoneNumber || phoneNumber.length < 7}
+                    >
+                      <Phone className="h-4 w-4 mr-2" />
+                      Send Verification Code
+                    </Button>
+                  </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2 text-green-400">
                     <CheckCircle className="h-5 w-5" />
@@ -231,6 +421,30 @@ const KYC = () => {
       </div>
     );
   };
+
+  // Show completion screen if KYC is fully completed
+  if (isKYCCompleted()) {
+    return (
+      <AccountLayout>
+        <div className="space-y-6">
+          {/* Header */}
+          <div>
+            <h1 className="text-3xl font-black text-foreground mb-2">
+              KYC Verification Complete
+            </h1>
+            <p className="text-foreground/60">
+              All verification steps have been successfully completed
+            </p>
+          </div>
+
+          {/* Completion Screen */}
+          <Card className="glass-card p-8">
+            {renderCompletionScreen()}
+          </Card>
+        </div>
+      </AccountLayout>
+    );
+  }
 
   return (
     <AccountLayout>
