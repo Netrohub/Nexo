@@ -99,6 +99,31 @@
   [dir="rtl"] {
     direction: rtl;
   }
+
+  /* Fix emoji color inheritance in Arabic/RTL - emojis should maintain default color */
+  [lang="ar"] *,
+  [dir="rtl"] * {
+    /* Prevent emojis from inheriting gradient text colors */
+    -webkit-text-fill-color: inherit;
+  }
+
+  /* Ensure emojis don't get gradient colors */
+  [lang="ar"] .bg-clip-text,
+  [dir="rtl"] .bg-clip-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+
+  /* Reset emoji-specific elements to use default emoji rendering */
+  [lang="ar"] span:has(emoji),
+  [dir="rtl"] span:has(emoji),
+  [lang="ar"] *:is([data-emoji]),
+  [dir="rtl"] *:is([data-emoji]) {
+    -webkit-text-fill-color: initial;
+    color: initial;
+    background-clip: unset !important;
+    -webkit-background-clip: unset !important;
+  }
   
   /* Ensure emojis display properly in RTL text */
   [dir="rtl"] * {
