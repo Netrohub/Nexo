@@ -198,6 +198,7 @@ const Register = () => {
                       id="password"
                       type="password"
                       placeholder={t('createStrongPassword')}
+                      autoComplete="new-password"
                       className="pl-10 glass-card border-border/50 focus:border-primary/50"
                       {...register("password")}
                     />
@@ -221,6 +222,7 @@ const Register = () => {
                       id="passwordConfirmation"
                       type="password"
                       placeholder={t('confirmYourPassword')}
+                      autoComplete="new-password"
                       className="pl-10 glass-card border-border/50 focus:border-primary/50"
                       {...register("passwordConfirmation")}
                     />

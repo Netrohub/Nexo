@@ -178,6 +178,7 @@ const Login = () => {
                       id="password"
                       type="password"
                       placeholder="••••••••"
+                      autoComplete="current-password"
                       className="pl-10 glass-card border-border/50 focus:border-primary/50"
                       {...register("password")}
                     />

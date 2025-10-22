@@ -277,6 +277,7 @@ const ForgotPassword = () => {
                       id="newPassword"
                       type="password"
                       placeholder="••••••••"
+                      autoComplete="new-password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       className="glass-card border-border/50"
@@ -290,6 +291,7 @@ const ForgotPassword = () => {
                       id="confirmPassword"
                       type="password"
                       placeholder="••••••••"
+                      autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="glass-card border-border/50"

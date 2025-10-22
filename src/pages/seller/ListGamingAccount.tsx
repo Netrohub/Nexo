@@ -197,6 +197,7 @@ const ListGamingAccount = () => {
                   id="accountPassword"
                   type="password"
                   placeholder="Enter account password"
+                  autoComplete="off"
                   className="glass-card border-border/50 focus:border-primary/50"
                   required
                 />
