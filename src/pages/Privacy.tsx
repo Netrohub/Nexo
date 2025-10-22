@@ -131,9 +131,14 @@ const Privacy = () => {
             <section>
               <h2 className="text-2xl font-bold text-foreground mb-4">11. Contact Us</h2>
               <p>
-                If you have any questions about this Privacy Policy, please contact us at{" "}
-                <a href="mailto:privacy@nexo.com" className="text-primary hover:text-primary/80">
-                  privacy@nexo.com
+                If you have any questions about this Privacy Policy, please join our Discord community:{" "}
+                <a 
+                  href="https://discord.gg/Jk3zxyDb" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary/80 underline"
+                >
+                  https://discord.gg/Jk3zxyDb
                 </a>
               </p>
             </section>

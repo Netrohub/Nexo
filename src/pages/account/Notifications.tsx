@@ -1,9 +1,11 @@
+import { useState } from "react";
 import AccountLayout from "@/components/AccountLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Bell, 
   ShoppingBag, 
@@ -80,7 +82,17 @@ const getIconColor = (type: string) => {
 };
 
 const Notifications = () => {
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const { toast } = useToast();
+  const [notificationList, setNotificationList] = useState(notifications);
+  const unreadCount = notificationList.filter((n) => !n.read).length;
+
+  const handleMarkAllAsRead = () => {
+    setNotificationList(notificationList.map(n => ({ ...n, read: true })));
+    toast({
+      title: "All notifications marked as read",
+      description: `${unreadCount} notifications updated.`,
+    });
+  };
 
   return (
     <AccountLayout>
@@ -95,7 +107,12 @@ const Notifications = () => {
               {unreadCount > 0 ? `${unreadCount} unread notifications` : "All caught up!"}
             </p>
           </div>
-          <Button variant="outline" className="glass-card border-border/50">
+          <Button 
+            variant="outline" 
+            className="glass-card border-border/50"
+            onClick={handleMarkAllAsRead}
+            disabled={unreadCount === 0}
+          >
             <CheckCircle2 className="h-4 w-4 mr-2" />
             Mark All as Read
           </Button>
