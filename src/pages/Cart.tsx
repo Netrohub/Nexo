@@ -49,13 +49,22 @@ const Cart = () => {
     }
 
     try {
-      // Import mockApi for coupon validation
-      const { mockApi } = await import('@/lib/mockApi');
-      const coupon = await mockApi.validateCoupon(couponCode);
+      // Simple coupon validation (replace with real API call)
+      const validCoupons = {
+        'WELCOME10': { discount: 10, type: 'percentage' },
+        'SAVE20': { discount: 20, type: 'percentage' },
+        'FIRST5': { discount: 5, type: 'dollar' }
+      };
+      
+      const coupon = validCoupons[couponCode.toUpperCase()];
+      
+      if (!coupon) {
+        throw new Error('Invalid coupon code');
+      }
       
       toast({
         title: "Coupon applied!",
-        description: `Coupon "${coupon.code}" has been applied. ${coupon.discount}${coupon.type === 'percentage' ? '%' : '$'} discount.`,
+        description: `Coupon "${couponCode.toUpperCase()}" has been applied. ${coupon.discount}${coupon.type === 'percentage' ? '%' : '$'} discount.`,
       });
       setCouponCode("");
     } catch (error: any) {
