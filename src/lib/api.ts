@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.nxoland.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nxoland.com/api';
 
 // Types
 export interface ApiResponse<T = any> {
