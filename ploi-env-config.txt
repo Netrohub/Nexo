@@ -1,0 +1,19 @@
+# Nexo Environment Configuration for Ploi
+# Copy these variables to your Ploi environment settings
+
+# API Configuration
+VITE_API_BASE_URL=https://api.nxoland.com/api
+
+# Coming Soon Mode (set to true to show coming soon page)
+VITE_COMING_SOON_MODE=false
+
+# Mock API (should always be false in production)
+VITE_MOCK_API=false
+
+# Node Environment
+NODE_ENV=production
+
+# Build Configuration
+NODE_VERSION=18
+BUILD_COMMAND=npm ci && npm run build
+PUBLIC_PATH=dist
