@@ -1,7 +1,4 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Starfield from "@/components/Starfield";
 import AccountLayout from "@/components/AccountLayout";
 import { DisputeForm } from "@/components/disputes/DisputeForm";
 import { Card } from "@/components/ui/card";
@@ -20,12 +17,7 @@ const CreateDispute = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative">
-      <Starfield />
-      <Navbar />
-
-      <main className="flex-1 relative z-10">
-        <AccountLayout>
+    <AccountLayout>
           <div className="space-y-6 max-w-3xl">
             {/* Header */}
             <div>
@@ -54,11 +46,7 @@ const CreateDispute = () => {
             {/* Form */}
             <DisputeForm orderId={orderId} onSubmit={handleSubmit} />
           </div>
-        </AccountLayout>
-      </main>
-
-      <Footer />
-    </div>
+    </AccountLayout>
   );
 };
 

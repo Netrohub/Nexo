@@ -1,129 +1,108 @@
-import * as React from "react";
-import * as LabelPrimitive from "@radix-ui/react-label";
-import { Slot } from "@radix-ui/react-slot";
-import { Controller, ControllerProps, FieldPath, FieldValues, FormProvider, useFormContext } from "react-hook-form";
+import React from 'react';
+import { useForm, UseFormReturn, FieldValues, Path } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
+export interface FormProps<T extends FieldValues> {
+  schema?: z.ZodSchema<T>;
+  defaultValues?: Partial<T>;
+  onSubmit: (data: T) => void | Promise<void>;
+  children: (form: UseFormReturn<T>) => React.ReactNode;
+  loading?: boolean;
+  className?: string;
+}
 
-const Form = FormProvider;
+export function Form<T extends FieldValues>({
+  schema,
+  defaultValues,
+  onSubmit,
+  children,
+  loading = false,
+  className,
+}: FormProps<T>) {
+  const form = useForm<T>({
+    resolver: schema ? zodResolver(schema) : undefined,
+    defaultValues,
+  });
 
-type FormFieldContextValue<
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
-> = {
-  name: TName;
-};
-
-const FormFieldContext = React.createContext<FormFieldContextValue>({} as FormFieldContextValue);
-
-const FormField = <
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
->({
-  ...props
-}: ControllerProps<TFieldValues, TName>) => {
-  return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props} />
-    </FormFieldContext.Provider>
-  );
-};
-
-const useFormField = () => {
-  const fieldContext = React.useContext(FormFieldContext);
-  const itemContext = React.useContext(FormItemContext);
-  const { getFieldState, formState } = useFormContext();
-
-  const fieldState = getFieldState(fieldContext.name, formState);
-
-  if (!fieldContext) {
-    throw new Error("useFormField should be used within <FormField>");
-  }
-
-  const { id } = itemContext;
-
-  return {
-    id,
-    name: fieldContext.name,
-    formItemId: `${id}-form-item`,
-    formDescriptionId: `${id}-form-item-description`,
-    formMessageId: `${id}-form-item-message`,
-    ...fieldState,
-  };
-};
-
-type FormItemContextValue = {
-  id: string;
-};
-
-const FormItemContext = React.createContext<FormItemContextValue>({} as FormItemContextValue);
-
-const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => {
-    const id = React.useId();
-
-    return (
-      <FormItemContext.Provider value={{ id }}>
-        <div ref={ref} className={cn("space-y-2", className)} {...props} />
-      </FormItemContext.Provider>
-    );
-  },
-);
-FormItem.displayName = "FormItem";
-
-const FormLabel = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField();
-
-  return <Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />;
-});
-FormLabel.displayName = "FormLabel";
-
-const FormControl = React.forwardRef<React.ElementRef<typeof Slot>, React.ComponentPropsWithoutRef<typeof Slot>>(
-  ({ ...props }, ref) => {
-    const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
-
-    return (
-      <Slot
-        ref={ref}
-        id={formItemId}
-        aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
-        aria-invalid={!!error}
-        {...props}
-      />
-    );
-  },
-);
-FormControl.displayName = "FormControl";
-
-const FormDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
-  ({ className, ...props }, ref) => {
-    const { formDescriptionId } = useFormField();
-
-    return <p ref={ref} id={formDescriptionId} className={cn("text-sm text-muted-foreground", className)} {...props} />;
-  },
-);
-FormDescription.displayName = "FormDescription";
-
-const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
-  ({ className, children, ...props }, ref) => {
-    const { error, formMessageId } = useFormField();
-    const body = error ? String(error?.message) : children;
-
-    if (!body) {
-      return null;
+  const handleSubmit = form.handleSubmit(async (data) => {
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      console.error('Form submission error:', error);
     }
+  });
 
-    return (
-      <p ref={ref} id={formMessageId} className={cn("text-sm font-medium text-destructive", className)} {...props}>
-        {body}
-      </p>
-    );
-  },
-);
-FormMessage.displayName = "FormMessage";
+  return (
+    <Card className={`p-6 ${className || ''}`}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {children(form)}
+        <div className="flex justify-end gap-3">
+          <Button
+            type="submit"
+            disabled={loading || !form.formState.isValid}
+            className="min-w-[120px]"
+          >
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {loading ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+      </form>
+    </Card>
+  );
+}
 
-export { useFormField, Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField };
+export interface FormFieldProps<T extends FieldValues> {
+  form: UseFormReturn<T>;
+  name: Path<T>;
+  label: string;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+  disabled?: boolean;
+  className?: string;
+  render?: (field: any) => React.ReactNode;
+}
+
+export function FormField<T extends FieldValues>({
+  form,
+  name,
+  label,
+  placeholder,
+  type = 'text',
+  required = false,
+  disabled = false,
+  className,
+  render,
+}: FormFieldProps<T>) {
+  const { register, formState: { errors } } = form;
+  const error = errors[name];
+
+  return (
+    <div className={`space-y-2 ${className || ''}`}>
+      <label className="text-sm font-medium text-foreground">
+        {label}
+        {required && <span className="text-destructive ml-1">*</span>}
+      </label>
+      {render ? (
+        render(form.register(name))
+      ) : (
+        <input
+          {...register(name)}
+          type={type}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+        />
+      )}
+      {error && (
+        <p className="text-sm text-destructive">
+          {error.message as string}
+        </p>
+      )}
+    </div>
+  );
+}

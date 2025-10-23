@@ -212,11 +212,22 @@ const KYCStatusComponent: React.FC = () => {
         )}
 
         {kycStatus.status === 'approved' && (
-          <Button variant="outline" asChild>
-            <Link to="/seller/dashboard">
-              {t('kyc.goToSellerDashboard')}
-            </Link>
-          </Button>
+          user?.subscription?.plan === 'Elite' ? (
+            <Button variant="outline" asChild>
+              <Link to="/seller/dashboard">
+                {t('kyc.goToSellerDashboard')}
+              </Link>
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              className="opacity-50 cursor-not-allowed" 
+              disabled
+              title="Elite plan required for seller dashboard"
+            >
+              {t('kyc.goToSellerDashboard')} (Elite Only)
+            </Button>
+          )
         )}
       </div>
     </div>

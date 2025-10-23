@@ -97,6 +97,7 @@ const Pricing = () => {
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
   const [currentPlan] = useState("Pro"); // Mock current plan
+  const [isUpgrading, setIsUpgrading] = useState(false);
 
   // Calculate prorated upgrade cost
   const calculateUpgradeCost = (newPlan: string) => {
@@ -150,28 +151,44 @@ const Pricing = () => {
   const handleConfirmUpgrade = async () => {
     if (!selectedPlan) return;
 
+    setIsUpgrading(true);
     try {
       toast({
         title: "Processing upgrade...",
         description: "Please wait while we process your upgrade.",
       });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simulate API call with progress
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Simulate payment processing
+      toast({
+        title: "Payment processing...",
+        description: "Verifying payment details...",
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast({
         title: "Plan upgraded! 🎉",
-        description: `You're now on the ${selectedPlan.name} plan!`,
+        description: `You're now on the ${selectedPlan.name} plan! Welcome to the next level!`,
       });
 
       setUpgradeDialogOpen(false);
       setSelectedPlan(null);
+      
+      // Redirect to dashboard after successful upgrade
+      setTimeout(() => {
+        navigate('/account/dashboard');
+      }, 2000);
     } catch (error) {
       toast({
         title: "Upgrade failed",
-        description: "Failed to upgrade plan. Please try again.",
+        description: "Failed to upgrade plan. Please check your payment method and try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsUpgrading(false);
     }
   };
   
@@ -205,7 +222,7 @@ const Pricing = () => {
         {/* Pricing Cards */}
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto">
               {plans.map((plan) => {
                 const Icon = plan.icon;
                 return (
@@ -216,12 +233,17 @@ const Pricing = () => {
                     }`}
                   >
                     {plan.popular && (
-                      <div className="absolute top-0 right-0 bg-gradient-primary text-primary-foreground text-xs font-bold px-4 py-1 rounded-bl-lg">
-                        MOST POPULAR
+                      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                        <div className="bg-gradient-to-r from-primary to-accent text-white text-xs font-bold px-6 py-2 rounded-full shadow-lg border-2 border-white/20">
+                          <span className="flex items-center gap-1">
+                            <Crown className="h-3 w-3" />
+                            MOST POPULAR
+                          </span>
+                        </div>
                       </div>
                     )}
 
-                    <div className="p-8 space-y-6">
+                    <div className={`p-6 sm:p-8 space-y-6 ${plan.popular ? 'pt-12' : ''}`}>
                       {/* Icon and Name */}
                       <div className="space-y-4">
                         <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${plan.color}`}>
@@ -238,10 +260,10 @@ const Pricing = () => {
                       {/* Price */}
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-2">
-                          <span className="text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                          <span className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                             {plan.price}
                           </span>
-                          <span className="text-foreground/60">/{plan.period}</span>
+                          <span className="text-foreground/60 text-sm sm:text-base">/{plan.period}</span>
                         </div>
                       </div>
 
@@ -285,6 +307,51 @@ const Pricing = () => {
               })}
             </div>
 
+            {/* Plan Comparison */}
+            <div className="mt-20 max-w-4xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-black text-center mb-8 sm:mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Plan Comparison
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full glass-card rounded-lg overflow-hidden min-w-[600px]">
+                  <thead>
+                    <tr className="border-b border-border/30">
+                      <th className="text-left p-4 font-semibold text-foreground">Features</th>
+                      <th className="text-center p-4 font-semibold text-foreground">Free</th>
+                      <th className="text-center p-4 font-semibold text-foreground">Pro</th>
+                      <th className="text-center p-4 font-semibold text-foreground">Elite</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-border/20">
+                      <td className="p-4 text-foreground/70">Product Listings</td>
+                      <td className="p-4 text-center">3</td>
+                      <td className="p-4 text-center">Unlimited</td>
+                      <td className="p-4 text-center">Unlimited</td>
+                    </tr>
+                    <tr className="border-b border-border/20">
+                      <td className="p-4 text-foreground/70">Transaction Fee</td>
+                      <td className="p-4 text-center">5%</td>
+                      <td className="p-4 text-center">3%</td>
+                      <td className="p-4 text-center">1.5%</td>
+                    </tr>
+                    <tr className="border-b border-border/20">
+                      <td className="p-4 text-foreground/70">Support</td>
+                      <td className="p-4 text-center">Community</td>
+                      <td className="p-4 text-center">Priority</td>
+                      <td className="p-4 text-center">24/7 Premium</td>
+                    </tr>
+                    <tr className="border-b border-border/20">
+                      <td className="p-4 text-foreground/70">Analytics</td>
+                      <td className="p-4 text-center">Basic</td>
+                      <td className="p-4 text-center">Advanced</td>
+                      <td className="p-4 text-center">Advanced + API</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             {/* FAQ Section */}
             <div className="mt-20 max-w-3xl mx-auto">
               <h2 className="text-3xl font-black text-center mb-12 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -325,7 +392,7 @@ const Pricing = () => {
 
       {/* Upgrade Confirmation Dialog */}
       <Dialog open={upgradeDialogOpen} onOpenChange={setUpgradeDialogOpen}>
-        <DialogContent className="glass-card border-border/50">
+        <DialogContent className="glass-card border-border/50 max-w-md mx-auto">
           <DialogHeader>
             <DialogTitle>Upgrade to {selectedPlan?.name} Plan</DialogTitle>
             <DialogDescription>
@@ -374,11 +441,26 @@ const Pricing = () => {
             );
           })()}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setUpgradeDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setUpgradeDialogOpen(false)}
+              disabled={isUpgrading}
+            >
               Cancel
             </Button>
-            <Button className="btn-glow" onClick={handleConfirmUpgrade}>
-              Confirm Upgrade
+            <Button 
+              className="btn-glow" 
+              onClick={handleConfirmUpgrade}
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Processing...
+                </>
+              ) : (
+                'Confirm Upgrade'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

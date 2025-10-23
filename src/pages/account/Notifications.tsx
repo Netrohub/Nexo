@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AccountLayout from "@/components/AccountLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,12 +85,42 @@ const Notifications = () => {
   const { toast } = useToast();
   const [notificationList, setNotificationList] = useState(notifications);
   const unreadCount = notificationList.filter((n) => !n.read).length;
+  
+  // Notification preferences state
+  const [preferences, setPreferences] = useState({
+    orderNotifications: true,
+    paymentNotifications: true,
+    messageNotifications: true,
+    reviewNotifications: true,
+    marketingEmails: false,
+  });
+
+  // Load saved preferences on mount
+  useEffect(() => {
+    const savedPreferences = localStorage.getItem('user_notification_preferences');
+    if (savedPreferences) {
+      setPreferences(JSON.parse(savedPreferences));
+    }
+  }, []);
 
   const handleMarkAllAsRead = () => {
     setNotificationList(notificationList.map(n => ({ ...n, read: true })));
     toast({
       title: "All notifications marked as read",
       description: `${unreadCount} notifications updated.`,
+    });
+  };
+
+  const handlePreferenceChange = (key: string, value: boolean) => {
+    const newPreferences = { ...preferences, [key]: value };
+    setPreferences(newPreferences);
+    
+    // Save to localStorage
+    localStorage.setItem('user_notification_preferences', JSON.stringify(newPreferences));
+    
+    toast({
+      title: "Preferences Updated",
+      description: "Your notification preferences have been saved.",
     });
   };
 
@@ -129,7 +159,11 @@ const Notifications = () => {
                 </Label>
                 <p className="text-sm text-foreground/60">Get notified when you receive new orders</p>
               </div>
-              <Switch id="order-notifications" defaultChecked />
+              <Switch 
+                id="order-notifications" 
+                checked={preferences.orderNotifications}
+                onCheckedChange={(checked) => handlePreferenceChange('orderNotifications', checked)}
+              />
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg glass-card border border-border/30">
@@ -139,7 +173,11 @@ const Notifications = () => {
                 </Label>
                 <p className="text-sm text-foreground/60">Get notified about payment transactions</p>
               </div>
-              <Switch id="payment-notifications" defaultChecked />
+              <Switch 
+                id="payment-notifications" 
+                checked={preferences.paymentNotifications}
+                onCheckedChange={(checked) => handlePreferenceChange('paymentNotifications', checked)}
+              />
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg glass-card border border-border/30">
@@ -149,7 +187,11 @@ const Notifications = () => {
                 </Label>
                 <p className="text-sm text-foreground/60">Get notified about new messages</p>
               </div>
-              <Switch id="message-notifications" defaultChecked />
+              <Switch 
+                id="message-notifications" 
+                checked={preferences.messageNotifications}
+                onCheckedChange={(checked) => handlePreferenceChange('messageNotifications', checked)}
+              />
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg glass-card border border-border/30">
@@ -159,7 +201,11 @@ const Notifications = () => {
                 </Label>
                 <p className="text-sm text-foreground/60">Get notified about new reviews</p>
               </div>
-              <Switch id="review-notifications" defaultChecked />
+              <Switch 
+                id="review-notifications" 
+                checked={preferences.reviewNotifications}
+                onCheckedChange={(checked) => handlePreferenceChange('reviewNotifications', checked)}
+              />
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg glass-card border border-border/30">
@@ -169,7 +215,11 @@ const Notifications = () => {
                 </Label>
                 <p className="text-sm text-foreground/60">Receive promotional offers and updates</p>
               </div>
-              <Switch id="marketing-notifications" />
+              <Switch 
+                id="marketing-notifications" 
+                checked={preferences.marketingEmails}
+                onCheckedChange={(checked) => handlePreferenceChange('marketingEmails', checked)}
+              />
             </div>
           </div>
         </Card>

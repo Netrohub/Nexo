@@ -233,10 +233,10 @@ const Products = () => {
           
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto">
-              <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-4 text-center">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-4 text-center">
                 {t('allProducts')}
               </h1>
-              <p className="text-center text-foreground/60 mb-8">
+              <p className="text-center text-foreground/60 mb-8 text-sm sm:text-base">
                 {t('browseProducts')}
               </p>
 
@@ -260,8 +260,8 @@ const Products = () => {
           <div className="container mx-auto px-4">
             {/* Filter Bar */}
             <div className="mb-8 glass-card p-4 rounded-lg">
-              <div className="flex flex-wrap gap-4 items-center justify-between">
-                <div className="flex flex-wrap gap-3 items-center">
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto">
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -273,7 +273,7 @@ const Products = () => {
                   </Button>
                   
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-[180px] glass-card border-primary/30">
+                    <SelectTrigger className="w-full sm:w-[160px] glass-card border-primary/30">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent className="glass-card">
@@ -286,7 +286,7 @@ const Products = () => {
                   </Select>
 
                   <Select value={selectedPriceRange} onValueChange={setSelectedPriceRange}>
-                    <SelectTrigger className="w-[180px] glass-card border-primary/30">
+                    <SelectTrigger className="w-full sm:w-[160px] glass-card border-primary/30">
                       <SelectValue placeholder="Price Range" />
                     </SelectTrigger>
                     <SelectContent className="glass-card">
@@ -299,9 +299,9 @@ const Products = () => {
                   </Select>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-[180px] glass-card border-primary/30">
+                    <SelectTrigger className="w-full sm:w-[160px] glass-card border-primary/30">
                       <SelectValue placeholder={t('sortBy')} />
                     </SelectTrigger>
                     <SelectContent className="glass-card">
@@ -313,7 +313,7 @@ const Products = () => {
                     </SelectContent>
                   </Select>
 
-                  <div className="hidden md:flex gap-2">
+                  <div className="flex gap-2">
                     <Button 
                       size="icon" 
                       variant="outline" 
@@ -324,7 +324,7 @@ const Products = () => {
                     </Button>
                     <Button 
                       size="icon" 
-                      variant="outline"
+                      variant="outline" 
                       className={`glass-card ${viewMode === 'list' ? 'border-primary bg-primary/10' : 'border-primary/30'}`}
                       onClick={() => setViewMode('list')}
                     >
@@ -348,6 +348,63 @@ const Products = () => {
                       </button>
                     </Badge>
                   ))}
+                </div>
+              )}
+
+              {/* Advanced Filters Panel */}
+              {showFilters && (
+                <div className="mt-6 p-4 border border-primary/20 rounded-lg bg-primary/5">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground">Advanced Filters</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Rating</label>
+                      <Select>
+                        <SelectTrigger className="glass-card border-primary/30">
+                          <SelectValue placeholder="Any Rating" />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card">
+                          <SelectItem value="4+">4+ Stars</SelectItem>
+                          <SelectItem value="3+">3+ Stars</SelectItem>
+                          <SelectItem value="2+">2+ Stars</SelectItem>
+                          <SelectItem value="1+">1+ Stars</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Seller Type</label>
+                      <Select>
+                        <SelectTrigger className="glass-card border-primary/30">
+                          <SelectValue placeholder="Any Seller" />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card">
+                          <SelectItem value="verified">Verified Sellers</SelectItem>
+                          <SelectItem value="premium">Premium Sellers</SelectItem>
+                          <SelectItem value="new">New Sellers</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Availability</label>
+                      <Select>
+                        <SelectTrigger className="glass-card border-primary/30">
+                          <SelectValue placeholder="Any Status" />
+                        </SelectTrigger>
+                        <SelectContent className="glass-card">
+                          <SelectItem value="in-stock">In Stock</SelectItem>
+                          <SelectItem value="low-stock">Low Stock</SelectItem>
+                          <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-4">
+                    <Button variant="outline" size="sm" className="glass-card border-primary/30">
+                      Clear All
+                    </Button>
+                    <Button size="sm" className="bg-primary hover:bg-primary/90">
+                      Apply Filters
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

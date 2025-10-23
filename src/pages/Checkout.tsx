@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { tapPayment } from "@/lib/tapPayment";
 import { 
   CreditCard, 
@@ -33,6 +34,7 @@ const cartItems = [
 const Checkout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   
@@ -41,7 +43,7 @@ const Checkout = () => {
   const [cardName, setCardName] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(user?.email || "");
   
   const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
   const serviceFee = subtotal * 0.03;
@@ -106,9 +108,21 @@ const Checkout = () => {
         description: `Your order has been placed. Transaction ID: ${paymentResult.id}`,
       });
 
-      // Redirect to success page after a short delay
+      // Store order details for confirmation page
+      const orderDetails = {
+        id: paymentResult.id,
+        status: 'completed',
+        total: total,
+        items: cartItems,
+        paymentMethod: 'Credit Card',
+        orderDate: new Date().toISOString(),
+        estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
+      localStorage.setItem('last_order', JSON.stringify(orderDetails));
+
+      // Redirect to order confirmation page
       setTimeout(() => {
-        navigate('/account/orders');
+        navigate('/order-confirmation');
       }, 2000);
 
     } catch (error: any) {
@@ -131,13 +145,13 @@ const Checkout = () => {
       <main className="flex-1 relative z-10 py-16">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="mb-8">
-            <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
               Checkout
             </h1>
-            <p className="text-foreground/60">Complete your purchase securely</p>
+            <p className="text-foreground/60 text-sm sm:text-base">Complete your purchase securely</p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Checkout Form */}
             <div className="lg:col-span-2 space-y-6">
               {/* Contact Information */}
@@ -150,9 +164,9 @@ const Checkout = () => {
                       id="email"
                       type="email"
                       placeholder="your@email.com"
-                      className="glass-card border-border/50"
+                      className="glass-card border-border/50 bg-muted/50"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      readOnly
                       required
                     />
                   </div>
@@ -231,7 +245,7 @@ const Checkout = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="expiry">Expiry Date (MM/YY) <span className="text-destructive">*</span></Label>
                       <Input
@@ -239,7 +253,19 @@ const Checkout = () => {
                         placeholder="01/25"
                         className="glass-card border-border/50"
                         value={expiryDate}
-                        onChange={(e) => setExpiryDate(e.target.value)}
+                        onChange={(e) => {
+                          let value = e.target.value;
+                          // Only allow numbers and forward slash
+                          value = value.replace(/[^0-9/]/g, '');
+                          // Auto-format MM/YY
+                          if (value.length >= 2 && !value.includes('/')) {
+                            value = value.substring(0, 2) + '/' + value.substring(2);
+                          }
+                          // Limit to MM/YY format
+                          if (value.length <= 5) {
+                            setExpiryDate(value);
+                          }
+                        }}
                         maxLength={5}
                         required
                       />

@@ -66,7 +66,7 @@ export const DisputeCard = ({ dispute }: DisputeCardProps) => {
                 View Details
               </Button>
             </Link>
-            <Link to={`/account/orders`}>
+            <Link to={`/account/orders/${dispute.orderId}`}>
               <Button size="sm" variant="ghost">
                 View Order
               </Button>

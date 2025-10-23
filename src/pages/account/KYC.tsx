@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AccountLayout from '@/components/AccountLayout';
 import { Card } from '@/components/ui/card';
@@ -87,6 +87,25 @@ const KYC = () => {
     identity: user?.kycStatus === 'verified',
   });
 
+  // Update verification status when user data changes
+  useEffect(() => {
+    setVerificationStatus({
+      email: user?.emailVerified || false,
+      phone: user?.phoneVerified || false,
+      identity: user?.kycStatus === 'verified',
+    });
+  }, [user]);
+
+  // Auto-navigate to next incomplete step
+  useEffect(() => {
+    if (user) {
+      const nextStep = getNextIncompleteStep();
+      if (nextStep !== currentStep) {
+        setCurrentStep(nextStep);
+      }
+    }
+  }, [user, currentStep]);
+
   const steps = [
     {
       id: 1,
@@ -117,6 +136,20 @@ const KYC = () => {
 
   const isKYCCompleted = () => {
     return verificationStatus.email && verificationStatus.phone && verificationStatus.identity;
+  };
+
+  const getNextIncompleteStep = () => {
+    if (!verificationStatus.email) return 1;
+    if (!verificationStatus.phone) return 2;
+    if (!verificationStatus.identity) return 3;
+    return 3; // All completed
+  };
+
+  const canNavigateToStep = (step: number) => {
+    if (step === 1) return true; // Always allow step 1
+    if (step === 2) return verificationStatus.email; // Need email verified
+    if (step === 3) return verificationStatus.email && verificationStatus.phone; // Need both email and phone
+    return false;
   };
 
   const handleEmailVerification = async () => {
@@ -221,12 +254,23 @@ const KYC = () => {
         </Card>
 
         <div className="flex gap-3">
-          <Button asChild className="flex-1 btn-glow">
-            <Link to="/seller/dashboard">
-              Go to Seller Dashboard
+          {user?.subscription?.plan === 'Elite' ? (
+            <Button asChild className="flex-1 btn-glow">
+              <Link to="/seller/dashboard">
+                Go to Seller Dashboard
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Link>
+            </Button>
+          ) : (
+            <Button 
+              className="flex-1 btn-glow opacity-50 cursor-not-allowed" 
+              disabled
+              title="Elite plan required for seller dashboard"
+            >
+              Go to Seller Dashboard (Elite Only)
               <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
-          </Button>
+            </Button>
+          )}
           <Button asChild variant="outline" className="flex-1">
             <Link to="/account/dashboard">
               Back to Account
@@ -269,106 +313,125 @@ const KYC = () => {
           <div className="space-y-4">
             {currentStep === 1 && (
               <div className="space-y-4">
-                <div className="text-center">
-                  <p className="text-sm text-foreground/60 mb-4">
-                    We'll send a verification link to your email address
-                  </p>
-                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                    <p className="font-medium">{user?.email}</p>
+                {verificationStatus.email ? (
+                  <div className="text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-4">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm font-medium text-green-500">Email Already Verified</span>
+                    </div>
+                    <p className="text-sm text-foreground/60 mb-4">
+                      Your email has been successfully verified
+                    </p>
+                    <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                      <p className="font-medium text-primary">{user?.email}</p>
+                    </div>
                   </div>
-                </div>
-                
-                {!verificationStatus.email ? (
-                  <Button onClick={handleEmailVerification} className="w-full btn-glow">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Send Verification Email
-                  </Button>
                 ) : (
-                  <div className="flex items-center justify-center gap-2 text-green-400">
-                    <CheckCircle className="h-5 w-5" />
-                    <span>Email Verified</span>
-                  </div>
+                  <>
+                    <div className="text-center">
+                      <p className="text-sm text-foreground/60 mb-4">
+                        We'll send a verification link to your email address
+                      </p>
+                      <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                        <p className="font-medium text-primary">{user?.email}</p>
+                      </div>
+                    </div>
+                    
+                    <Button onClick={handleEmailVerification} className="w-full btn-glow">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Verification Email
+                    </Button>
+                  </>
                 )}
               </div>
             )}
 
             {currentStep === 2 && (
               <div className="space-y-4">
-                <div className="text-center">
-                  <p className="text-sm text-foreground/60 mb-4">
-                    We'll send a verification code to your phone number
-                  </p>
-                </div>
-                
-                {!verificationStatus.phone ? (
-                  <div className="space-y-4">
-                    <div className="flex gap-2">
-                      <Popover open={countryOpen} onOpenChange={setCountryOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={countryOpen}
-                            className="w-[140px] justify-between"
-                          >
-                            <span className="flex items-center gap-2">
-                              <span>{selectedCountry.flag}</span>
-                              <span>{selectedCountry.dialCode}</span>
-                            </span>
-                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0">
-                          <Command>
-                            <CommandInput placeholder="Search country..." />
-                            <CommandList>
-                              <CommandEmpty>No country found.</CommandEmpty>
-                              <CommandGroup>
-                                {countries.map((country) => (
-                                  <CommandItem
-                                    key={country.code}
-                                    value={`${country.name} ${country.dialCode} ${country.code}`}
-                                    onSelect={() => {
-                                      setSelectedCountry(country);
-                                      setCountryOpen(false);
-                                    }}
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span>{country.flag}</span>
-                                      <span>{country.name}</span>
-                                      <span className="text-muted-foreground">{country.dialCode}</span>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      
-                      <Input
-                        type="tel"
-                        placeholder="Phone number"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        className="flex-1"
-                      />
+                {verificationStatus.phone ? (
+                  <div className="text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-4">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm font-medium text-green-500">Phone Already Verified</span>
                     </div>
-                    
-                    <Button 
-                      onClick={handlePhoneVerification} 
-                      className="w-full btn-glow"
-                      disabled={!phoneNumber || phoneNumber.length < 7}
-                    >
-                      <Phone className="h-4 w-4 mr-2" />
-                      Send Verification Code
-                    </Button>
+                    <p className="text-sm text-foreground/60 mb-4">
+                      Your phone number has been successfully verified
+                    </p>
+                    <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                      <p className="font-medium text-primary">{user?.phone || 'Phone number verified'}</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center gap-2 text-green-400">
-                    <CheckCircle className="h-5 w-5" />
-                    <span>Phone Verified</span>
-                  </div>
+                  <>
+                    <div className="text-center">
+                      <p className="text-sm text-foreground/60 mb-4">
+                        We'll send a verification code to your phone number
+                      </p>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex gap-2">
+                        <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={countryOpen}
+                              className="w-[140px] justify-between"
+                            >
+                              <span className="flex items-center gap-2">
+                                <span>{selectedCountry.flag}</span>
+                                <span>{selectedCountry.dialCode}</span>
+                              </span>
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0">
+                            <Command>
+                              <CommandInput placeholder="Search country..." />
+                              <CommandList>
+                                <CommandEmpty>No country found.</CommandEmpty>
+                                <CommandGroup>
+                                  {countries.map((country) => (
+                                    <CommandItem
+                                      key={country.code}
+                                      value={`${country.name} ${country.dialCode} ${country.code}`}
+                                      onSelect={() => {
+                                        setSelectedCountry(country);
+                                        setCountryOpen(false);
+                                      }}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span>{country.flag}</span>
+                                        <span>{country.name}</span>
+                                        <span className="text-muted-foreground">{country.dialCode}</span>
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        
+                        <Input
+                          type="tel"
+                          placeholder="Phone number"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                      
+                      <Button 
+                        onClick={handlePhoneVerification} 
+                        className="w-full btn-glow"
+                        disabled={!phoneNumber || phoneNumber.length < 7}
+                      >
+                        <Phone className="h-4 w-4 mr-2" />
+                        Send Verification Code
+                      </Button>
+                    </div>
+                  </>
                 )}
               </div>
             )}
@@ -398,30 +461,66 @@ const KYC = () => {
           </div>
         </Card>
 
+        {/* KYC Completion Message */}
+        {isKYCCompleted() && (
+          <Card className="glass-card p-6 border-green-500/30 bg-green-500/5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-full bg-green-500/20">
+                <CheckCircle className="h-6 w-6 text-green-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-green-500">KYC Verification Complete!</h3>
+                <p className="text-sm text-foreground/60">
+                  Your identity has been successfully verified. You can now access all platform features.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button asChild className="flex-1">
+                <Link to="/account/dashboard">
+                  Go to Dashboard
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="flex-1">
+                <Link to="/products">
+                  Browse Products
+                </Link>
+              </Button>
+            </div>
+          </Card>
+        )}
+
         {/* Navigation */}
-        <div className="flex gap-3">
-          {currentStep > 1 && (
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentStep(currentStep - 1)}
-              className="flex-1"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          )}
-          
-          {currentStep < 3 && (
-            <Button 
-              onClick={() => setCurrentStep(currentStep + 1)}
-              className="flex-1 btn-glow"
-              disabled={currentStep === 1 && !verificationStatus.email}
-            >
-              Next
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          )}
-        </div>
+        {!isKYCCompleted() && (
+          <div className="flex gap-3">
+            {currentStep > 1 && (
+              <Button 
+                variant="outline" 
+                onClick={() => setCurrentStep(currentStep - 1)}
+                className="flex-1"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            )}
+            
+            {currentStep < 3 && (
+              <Button 
+                onClick={() => {
+                  const nextStep = getNextIncompleteStep();
+                  if (canNavigateToStep(nextStep)) {
+                    setCurrentStep(nextStep);
+                  }
+                }}
+                className="flex-1 btn-glow"
+                disabled={!canNavigateToStep(currentStep + 1)}
+              >
+                {currentStep === 1 && !verificationStatus.email ? 'Complete Email First' : 'Next'}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Benefits */}
         <Card className="glass-card p-6 border-primary/30">

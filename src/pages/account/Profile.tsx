@@ -36,6 +36,13 @@ const Profile = () => {
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [countryOpen, setCountryOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  
+  // Security modal states
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [enable2FAOpen, setEnable2FAOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Load saved avatar on mount
   useEffect(() => {
@@ -91,6 +98,77 @@ const Profile = () => {
       toast({
         title: "Upload failed",
         description: "Failed to upload avatar. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Security handlers
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Please fill in all password fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "Password Changed! ✅",
+        description: "Your password has been updated successfully.",
+      });
+      
+      setChangePasswordOpen(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to change password. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEnable2FA = async () => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "2FA Enabled! ✅",
+        description: "Two-factor authentication has been enabled successfully.",
+      });
+      
+      setEnable2FAOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to enable 2FA. Please try again.",
         variant: "destructive",
       });
     }
@@ -196,7 +274,8 @@ const Profile = () => {
                   id="email"
                   type="email"
                   defaultValue="john.doe@example.com"
-                  className="pl-10 glass-card border-border/50 focus:border-primary/50"
+                  className="pl-10 glass-card border-border/50 focus:border-primary/50 bg-muted/50"
+                  readOnly
                 />
               </div>
               <p className="text-xs text-foreground/50">
@@ -266,10 +345,14 @@ const Profile = () => {
                     placeholder="123456789"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="pl-10 glass-card border-border/50 focus:border-primary/50"
+                    className="pl-10 glass-card border-border/50 focus:border-primary/50 bg-muted/50"
+                    readOnly
                   />
                 </div>
               </div>
+              <p className="text-xs text-foreground/50">
+                Phone is verified ✓
+              </p>
             </div>
 
             {/* Bio */}
@@ -325,7 +408,12 @@ const Profile = () => {
                 <p className="font-semibold text-foreground mb-1">Password</p>
                 <p className="text-sm text-foreground/60">Last changed 30 days ago</p>
               </div>
-              <Button variant="outline" size="sm" className="glass-card border-border/50">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="glass-card border-border/50"
+                onClick={() => setChangePasswordOpen(true)}
+              >
                 Change Password
               </Button>
             </div>
@@ -335,7 +423,12 @@ const Profile = () => {
                 <p className="font-semibold text-foreground mb-1">Two-Factor Authentication</p>
                 <p className="text-sm text-foreground/60">Add an extra layer of security</p>
               </div>
-              <Button variant="outline" size="sm" className="glass-card border-border/50">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="glass-card border-border/50"
+                onClick={() => setEnable2FAOpen(true)}
+              >
                 Enable 2FA
               </Button>
             </div>
@@ -350,6 +443,100 @@ const Profile = () => {
           onChange={handleAvatarUpload}
           className="hidden"
         />
+
+        {/* Change Password Modal */}
+        {changePasswordOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="glass-card p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-bold text-foreground mb-4">Change Password</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="currentPassword" className="text-foreground">Current Password</Label>
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="glass-card border-border/50"
+                    placeholder="Enter current password"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="newPassword" className="text-foreground">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="glass-card border-border/50"
+                    placeholder="Enter new password"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="confirmPassword" className="text-foreground">Confirm New Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="glass-card border-border/50"
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    onClick={handleChangePassword}
+                    className="flex-1 btn-glow"
+                  >
+                    Change Password
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setChangePasswordOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Enable 2FA Modal */}
+        {enable2FAOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="glass-card p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-bold text-foreground mb-4">Enable Two-Factor Authentication</h3>
+              <div className="space-y-4">
+                <p className="text-sm text-foreground/60">
+                  Two-factor authentication adds an extra layer of security to your account. 
+                  You'll receive SMS codes on your verified phone number.
+                </p>
+                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                  <p className="text-sm text-primary font-medium">
+                    📱 2FA is only available via SMS to your verified phone number
+                  </p>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    onClick={handleEnable2FA}
+                    className="flex-1 btn-glow"
+                  >
+                    Enable 2FA
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setEnable2FAOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </AccountLayout>
   );

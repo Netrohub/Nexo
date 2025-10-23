@@ -12,26 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart, useRemoveFromCart } from "@/hooks/useApi";
 import { useToast } from "@/hooks/use-toast";
 
-const cartItems = [
-  {
-    id: 1,
-    name: "Steam Account - 200+ Games",
-    seller: "ProGamer_Elite",
-    price: 449.99,
-    quantity: 1,
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80",
-    category: "Gaming",
-  },
-  {
-    id: 2,
-    name: "Instagram Account - 50K Followers",
-    seller: "SocialKing",
-    price: 299.99,
-    quantity: 1,
-    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&q=80",
-    category: "Social Media",
-  },
-];
+// Removed hardcoded cart items - now using real cart data
 
 const Cart = () => {
   const { t } = useLanguage();
@@ -40,11 +21,11 @@ const Cart = () => {
   const { data: cart, isLoading } = useCart();
   const removeFromCart = useRemoveFromCart();
 
-  // Use real cart data if available, otherwise fall back to mock data
-  const items = cart?.items || cartItems;
-  const subtotal = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
-  const serviceFee = subtotal * 0.03; // 3% service fee
-  const total = subtotal + serviceFee;
+  // Use real cart data
+  const items = cart?.items || [];
+  const subtotal = cart?.subtotal || 0;
+  const serviceFee = cart?.service_fee || 0;
+  const total = cart?.total || 0;
 
   const handleRemoveItem = (itemId: number) => {
     removeFromCart.mutate(itemId, {
@@ -57,7 +38,7 @@ const Cart = () => {
     });
   };
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
       toast({
         title: "Error",
@@ -67,11 +48,23 @@ const Cart = () => {
       return;
     }
 
-    // TODO: Implement coupon application
-    toast({
-      title: "Coupon applied!",
-      description: `Coupon "${couponCode}" has been applied.`,
-    });
+    try {
+      // Import mockApi for coupon validation
+      const { mockApi } = await import('@/lib/mockApi');
+      const coupon = await mockApi.validateCoupon(couponCode);
+      
+      toast({
+        title: "Coupon applied!",
+        description: `Coupon "${coupon.code}" has been applied. ${coupon.discount}${coupon.type === 'percentage' ? '%' : '$'} discount.`,
+      });
+      setCouponCode("");
+    } catch (error: any) {
+      toast({
+        title: "Invalid Coupon",
+        description: error.message || "Please check with admin for valid coupons.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -85,60 +78,78 @@ const Cart = () => {
             <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
               {t('shoppingCart')}
             </h1>
-            <p className="text-foreground/60">{cartItems.length} {t('itemsInCart')}</p>
+            <p className="text-foreground/60">{items.length} {t('itemsInCart')}</p>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
-              {items.map((item: any) => (
-                <Card key={item.id} className="glass-card p-6">
-                  <div className="flex gap-4">
-                    {/* Image */}
-                    <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-border/50">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <div>
-                          <h3 className="font-bold text-lg text-foreground mb-1 line-clamp-1">
-                            {item.name}
-                          </h3>
-                          <p className="text-sm text-foreground/60">
-                            by {item.seller}
-                          </p>
-                          <Badge variant="secondary" className="mt-2 bg-primary/10 text-primary border-primary/20">
-                            {item.category}
-                          </Badge>
-                        </div>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleRemoveItem(item.id)}
-                          disabled={removeFromCart.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {/* Price (no quantity controls per requirements) */}
-                      <div className="flex items-center justify-between mt-4">
-                        <span className="text-sm text-foreground/60">Quantity: 1</span>
-                        <p className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                          ${item.price.toFixed(2)}
-                        </p>
-                      </div>
+              {items.length === 0 ? (
+                <Card className="glass-card p-8 text-center">
+                  <div className="flex flex-col items-center space-y-4">
+                    <ShoppingBag className="h-12 w-12 text-foreground/40" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Your cart is empty</h3>
+                      <p className="text-foreground/60 mb-4">Add some products to get started!</p>
+                      <Button asChild>
+                        <Link to="/products">
+                          <ShoppingBag className="h-4 w-4 mr-2" />
+                          {t('continueShopping')}
+                        </Link>
+                      </Button>
                     </div>
                   </div>
                 </Card>
-              ))}
+              ) : (
+                items.map((item: any) => (
+                  <Card key={item.id} className="glass-card p-6">
+                    <div className="flex gap-4">
+                      {/* Image */}
+                      <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-border/50">
+                        <img
+                          src={item.product?.images?.[0] || item.product?.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80'}
+                          alt={item.product?.title || item.product?.name || 'Product'}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <div>
+                            <h3 className="font-bold text-lg text-foreground mb-1 line-clamp-1">
+                              {item.product?.title || item.product?.name || 'Product'}
+                            </h3>
+                            <p className="text-sm text-foreground/60">
+                              by {item.product?.seller?.name || 'Seller'}
+                            </p>
+                            <Badge variant="secondary" className="mt-2 bg-primary/10 text-primary border-primary/20">
+                              {item.product?.category || 'Category'}
+                            </Badge>
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleRemoveItem(item.id)}
+                            disabled={removeFromCart.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        {/* Price and Quantity */}
+                        <div className="flex items-center justify-between mt-4">
+                          <span className="text-sm text-foreground/60">Quantity: {item.quantity}</span>
+                          <p className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                            ${item.price.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
 
               {/* Coupon Code */}
               <Card className="glass-card p-6">

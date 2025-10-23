@@ -103,7 +103,8 @@ const Orders = () => {
       title: "Contact Seller",
       description: `Opening chat with ${seller}...`,
     });
-    // TODO: Open chat/messaging system
+    // Navigate to disputes page with seller pre-filled
+    navigate(`/disputes/create?seller=${encodeURIComponent(seller)}`);
   };
 
   const handleLeaveReview = (orderId: string) => {
@@ -111,7 +112,8 @@ const Orders = () => {
       title: "Leave Review",
       description: "Opening review form...",
     });
-    // TODO: Open review modal/page
+    // Navigate to product page to leave review
+    navigate(`/products/${orderId}`);
   };
 
   const handleTrackOrder = (orderId: string) => {
@@ -119,7 +121,8 @@ const Orders = () => {
       title: "Track Order",
       description: "Opening order tracking...",
     });
-    // TODO: Show tracking information
+    // Navigate to order detail page for tracking
+    navigate(`/account/orders/${orderId}`);
   };
 
   const filteredOrders = orders.filter(order => {

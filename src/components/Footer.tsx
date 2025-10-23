@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Shield, Zap, Award } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Discord SVG icon component
 const DiscordIcon = ({ className }: { className?: string }) => (
@@ -11,6 +12,7 @@ const DiscordIcon = ({ className }: { className?: string }) => (
 
 const Footer = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   
   return (
     <footer className="border-t border-border/50 glass-card mt-auto relative overflow-hidden">
@@ -91,10 +93,17 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/seller/dashboard" className="text-sm text-foreground/60 hover:text-primary transition-colors flex items-center gap-2 group">
-                  <span className="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                  {t('sellOnNexo')}
-                </Link>
+                {user?.subscription?.plan === 'Elite' ? (
+                  <Link to="/seller/dashboard" className="text-sm text-foreground/60 hover:text-primary transition-colors flex items-center gap-2 group">
+                    <span className="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {t('sellOnNexo')}
+                  </Link>
+                ) : (
+                  <span className="text-sm text-foreground/30 cursor-not-allowed flex items-center gap-2 group" title="Elite plan required">
+                    <span className="w-1 h-1 rounded-full bg-foreground/30" />
+                    {t('sellOnNexo')} (Elite Only)
+                  </span>
+                )}
               </li>
               <li>
                 <Link to="/account/orders" className="text-sm text-foreground/60 hover:text-primary transition-colors flex items-center gap-2 group">

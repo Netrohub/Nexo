@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, ShoppingCart, User, LogOut } from "lucide-react";
+import { Search, ShoppingCart, User, LogOut, Heart, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
@@ -25,6 +25,7 @@ const Navbar = () => {
   const { data: cart } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [avatar, setAvatar] = useState<string>("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Get accurate cart count
   const cartCount = cart?.items?.length || 0;
@@ -95,7 +96,17 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 w-full border-b border-border/50 glass-card">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
+            {/* Mobile menu button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+            
             <Link to="/" className="flex items-center gap-3 group">
               <div className="relative flex h-10 w-10 items-center justify-center">
                 <div className="absolute inset-0 rounded-lg gradient-primary blur-md opacity-75 group-hover:opacity-100 transition-opacity"></div>
@@ -132,6 +143,7 @@ const Navbar = () => {
             </div>
           </div>
 
+          {/* Desktop Search */}
           <div className="hidden lg:flex flex-1 max-w-md mx-8">
             <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/70" />
@@ -139,6 +151,20 @@ const Navbar = () => {
                 type="search"
                 placeholder={t('searchPlaceholder') || "Search game accounts, social accounts..."}
                 className="w-full pl-10 bg-muted/50 border-border/50 focus:border-primary/50 focus:bg-muted/70 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
+          </div>
+
+          {/* Mobile Search */}
+          <div className="flex lg:hidden flex-1 max-w-xs mx-4">
+            <form onSubmit={handleSearch} className="relative w-full">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/70" />
+              <Input
+                type="search"
+                placeholder="Search..."
+                className="w-full pl-10 bg-muted/50 border-border/50 focus:border-primary/50 focus:bg-muted/70 transition-all text-sm"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -200,12 +226,25 @@ const Navbar = () => {
                         <span>{t('myAccount')}</span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/account/wishlist" className="cursor-pointer">
+                        <Heart className="mr-2 h-4 w-4" />
+                        <span>My Wishlist</span>
+                      </Link>
+                    </DropdownMenuItem>
                     {user?.roles?.includes('seller') && (
                       <DropdownMenuItem asChild>
-                        <Link to="/seller/dashboard" className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
-                          <span>{t('sellerDashboard')}</span>
-                        </Link>
+                        {user?.subscription?.plan === 'Elite' ? (
+                          <Link to="/seller/dashboard" className="cursor-pointer">
+                            <User className="mr-2 h-4 w-4" />
+                            <span>{t('sellerDashboard')}</span>
+                          </Link>
+                        ) : (
+                          <div className="cursor-not-allowed opacity-50" title="Elite plan required">
+                            <User className="mr-2 h-4 w-4" />
+                            <span>{t('sellerDashboard')} (Elite Only)</span>
+                          </div>
+                        )}
                       </DropdownMenuItem>
                     )}
                     {user?.roles?.includes('admin') && (
@@ -241,6 +280,63 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-border/50 glass-card">
+          <div className="container mx-auto px-4 py-4">
+            <div className="space-y-4">
+              {/* Mobile Navigation Links */}
+              <div className="space-y-2">
+                <Link 
+                  to="/" 
+                  className="block px-4 py-3 rounded-lg text-foreground/70 hover:bg-primary/10 hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('home')}
+                </Link>
+                <Link 
+                  to="/products" 
+                  className="block px-4 py-3 rounded-lg text-foreground/70 hover:bg-primary/10 hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('products')}
+                </Link>
+                <Link 
+                  to="/members" 
+                  className="block px-4 py-3 rounded-lg text-foreground/70 hover:bg-primary/10 hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('members')}
+                </Link>
+                <Link 
+                  to="/leaderboard" 
+                  className="block px-4 py-3 rounded-lg text-foreground/70 hover:bg-primary/10 hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('leaderboard')}
+                </Link>
+              </div>
+
+              {/* Mobile Auth Section */}
+              {!isAuthenticated && (
+                <div className="pt-4 border-t border-border/30 space-y-2">
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                      {t('login')}
+                    </Link>
+                  </Button>
+                  <Button asChild className="w-full">
+                    <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
+                      {t('register')}
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

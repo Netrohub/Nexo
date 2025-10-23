@@ -48,6 +48,59 @@ const stats = [
   },
 ];
 
+// Basic seller stats for regular users
+const sellerStats = [
+  {
+    label: "Total Revenue",
+    value: "$12,450",
+    change: "+23%",
+    icon: DollarSign,
+    color: "from-primary to-accent",
+  },
+  {
+    label: "Active Listings",
+    value: "24",
+    change: "+3",
+    icon: Package,
+    color: "from-green-500 to-emerald-600",
+  },
+  {
+    label: "Total Orders",
+    value: "156",
+    change: "+18%",
+    icon: ShoppingBag,
+    color: "from-blue-500 to-blue-700",
+  },
+  {
+    label: "Seller Rating",
+    value: "4.9",
+    change: "★★★★★",
+    icon: Star,
+    color: "from-yellow-500 to-orange-600",
+  },
+];
+
+const recentSales = [
+  {
+    product: "Steam Account - 200+ Games",
+    buyer: "User#1234",
+    amount: 449.99,
+    date: "2 hours ago",
+  },
+  {
+    product: "Instagram Account - 50K",
+    buyer: "User#5678",
+    amount: 299.99,
+    date: "5 hours ago",
+  },
+  {
+    product: "PlayStation Plus Premium",
+    buyer: "User#9012",
+    amount: 349.99,
+    date: "1 day ago",
+  },
+];
+
 const recentOrders = [
   {
     id: "ORD-001",
@@ -237,6 +290,71 @@ const Dashboard = () => {
           </Card>
         )}
 
+        {/* Seller Stats - Only show if user is a seller */}
+        {user?.roles?.includes('seller') && (
+          <>
+            <div className="border-t border-border/30 pt-6">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Seller Overview</h2>
+              
+              {/* Seller Stats Grid */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {sellerStats.map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <Card key={stat.label} className="glass-card p-6 relative overflow-hidden group hover:scale-105 transition-all">
+                      <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.color} opacity-10 rounded-full blur-2xl`} />
+                      <div className="relative">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className={`p-2 rounded-lg bg-gradient-to-br ${stat.color}`}>
+                            <Icon className="h-5 w-5 text-white" />
+                          </div>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                            {stat.change}
+                          </Badge>
+                        </div>
+                        <p className="text-2xl font-black text-foreground mb-1">{stat.value}</p>
+                        <p className="text-sm text-foreground/60">{stat.label}</p>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Recent Sales */}
+              <Card className="glass-card p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-foreground">Recent Sales</h3>
+                  <Button asChild variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                    <Link to="/seller/orders">
+                      View All
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Link>
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {recentSales.map((sale, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 rounded-lg glass-card border border-border/30"
+                    >
+                      <div>
+                        <p className="font-semibold text-foreground mb-1">{sale.product}</p>
+                        <p className="text-sm text-foreground/60">
+                          Sold to {sale.buyer} • {sale.date}
+                        </p>
+                      </div>
+                      <p className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                        ${sale.amount.toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          </>
+        )}
+
         {/* Account Status */}
         <Card className="glass-card p-6 border border-primary/30">
           <div className="flex items-start gap-4">
@@ -244,9 +362,9 @@ const Dashboard = () => {
               <Star className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-foreground mb-2">Upgrade to Pro</h3>
+              <h3 className="text-lg font-bold text-foreground mb-2">Upgrade to Elite</h3>
               <p className="text-foreground/60 mb-4">
-                Get access to premium features, lower fees, and priority support.
+                Get access to advanced analytics, premium features, and priority support.
               </p>
               <Button asChild className="btn-glow">
                 <Link to="/pricing">

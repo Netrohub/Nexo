@@ -25,26 +25,26 @@ const Hero = () => {
           </div>
           
           <div className="space-y-6 max-w-4xl">
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
               {t('heroTitle')}{" "}
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
                 
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-foreground/70 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-foreground/70 max-w-2xl mx-auto leading-relaxed px-4">
               {t('heroDescription')}
             </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 pt-4">
-            <Button asChild size="lg" className="gap-2 btn-glow text-base px-8 py-6">
+          <div className="flex flex-col sm:flex-row gap-4 pt-4 px-4">
+            <Button asChild size="lg" className="gap-2 btn-glow text-base px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto">
               <Link to="/products">
                 <ShoppingBag className="h-5 w-5" />
                 {t('exploreProducts')}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="gap-2 glass-card border-primary/30 hover:border-primary/50 text-base px-8 py-6">
+            <Button asChild size="lg" variant="outline" className="gap-2 glass-card border-primary/30 hover:border-primary/50 text-base px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto">
               <Link to="/seller/onboarding">
                 {t('becomeASeller')}
               </Link>
@@ -52,20 +52,20 @@ const Hero = () => {
           </div>
           
           {/* Feature badges */}
-          <div className="flex flex-wrap justify-center gap-6 pt-8">
-            <div className="flex items-center gap-2 text-sm text-foreground/70">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 pt-8 px-4">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-foreground/70">
               <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                 <Shield className="h-4 w-4 text-primary" />
               </div>
               <span>{t('securePayments')}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-foreground/70">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-foreground/70">
               <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
                 <Zap className="h-4 w-4 text-accent" />
               </div>
               <span>{t('instantAccess')}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-foreground/70">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-foreground/70">
               <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                 <Sparkles className="h-4 w-4 text-primary" />
               </div>

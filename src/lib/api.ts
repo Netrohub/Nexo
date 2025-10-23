@@ -1,16 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
-import { mockApi } from './mockApi';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-const USE_MOCK_API = import.meta.env.VITE_MOCK_API === 'true';
-
-// Log configuration on module load
-console.log('🔧 API Configuration:', {
-  API_BASE_URL,
-  USE_MOCK_API,
-  VITE_MOCK_API: import.meta.env.VITE_MOCK_API,
-});
 
 // Types
 export interface ApiResponse<T = any> {
@@ -273,13 +264,6 @@ class ApiClient {
 
   // Auth Methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API for login');
-      const authResponse = await mockApi.login(credentials.email, credentials.password);
-      this.setToken(authResponse.token);
-      return authResponse;
-    }
-    
     const response = await this.request<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
@@ -293,13 +277,6 @@ class ApiClient {
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API for registration');
-      const authResponse = await mockApi.register(userData);
-      this.setToken(authResponse.token);
-      return authResponse;
-    }
-    
     const response = await this.request<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
@@ -313,10 +290,6 @@ class ApiClient {
   }
 
   async logout(): Promise<void> {
-    if (USE_MOCK_API) {
-      return mockApi.logout();
-    }
-    
     try {
       await this.request('/auth/logout', { method: 'POST' });
     } finally {
@@ -325,10 +298,6 @@ class ApiClient {
   }
 
   async getCurrentUser(): Promise<User> {
-    if (USE_MOCK_API) {
-      return mockApi.getCurrentUser();
-    }
-    
     const response = await this.request<User>('/auth/me');
     return response.data;
   }
@@ -350,10 +319,6 @@ class ApiClient {
 
   // Product Methods
   async getProducts(filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> {
-    if (USE_MOCK_API) {
-      return mockApi.getProducts(filters);
-    }
-    
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -366,40 +331,22 @@ class ApiClient {
   }
 
   async getProduct(id: number): Promise<Product> {
-    if (USE_MOCK_API) {
-      return mockApi.getProduct(id);
-    }
-    
     const response = await this.request<Product>(`/products/${id}`);
     return response.data;
   }
 
   async getFeaturedProducts(): Promise<Product[]> {
-    if (USE_MOCK_API) {
-      return mockApi.getFeaturedProducts();
-    }
-    
     const response = await this.request<Product[]>('/products?featured=true');
     return response.data;
   }
 
   // Cart Methods
   async getCart(): Promise<Cart> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API for cart');
-      return mockApi.getCart();
-    }
-    
     const response = await this.request<Cart>('/cart');
     return response.data;
   }
 
   async addToCart(productId: number, quantity: number = 1): Promise<void> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API to add to cart');
-      return mockApi.addToCart(productId, quantity);
-    }
-    
     await this.request('/cart', {
       method: 'POST',
       body: JSON.stringify({ product_id: productId, quantity }),
@@ -407,11 +354,6 @@ class ApiClient {
   }
 
   async updateCartItem(itemId: number, quantity: number): Promise<void> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API to update cart item');
-      return mockApi.updateCartItem(itemId, quantity);
-    }
-    
     await this.request(`/cart/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify({ quantity }),
@@ -419,11 +361,6 @@ class ApiClient {
   }
 
   async removeFromCart(itemId: number): Promise<void> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API to remove from cart');
-      return mockApi.removeFromCart(itemId);
-    }
-    
     await this.request(`/cart/${itemId}`, { method: 'DELETE' });
   }
 
@@ -452,21 +389,11 @@ class ApiClient {
 
   // Wishlist Methods
   async getWishlist(): Promise<Product[]> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API for wishlist');
-      return mockApi.getWishlist();
-    }
-    
     const response = await this.request<Product[]>('/wishlist');
     return response.data;
   }
 
   async addToWishlist(productId: number): Promise<void> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API to add to wishlist');
-      return mockApi.addToWishlist(productId);
-    }
-    
     await this.request('/wishlist', {
       method: 'POST',
       body: JSON.stringify({ product_id: productId }),
@@ -474,11 +401,6 @@ class ApiClient {
   }
 
   async removeFromWishlist(productId: number): Promise<void> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API to remove from wishlist');
-      return mockApi.removeFromWishlist(productId);
-    }
-    
     await this.request(`/wishlist/${productId}`, { method: 'DELETE' });
   }
 
@@ -600,11 +522,6 @@ class ApiClient {
 
   // Members
   async getMembers(): Promise<User[]> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API for members');
-      return mockApi.getMembers();
-    }
-    
     const response = await this.request<User[]>('/members');
     return response.data;
   }
@@ -626,11 +543,6 @@ class ApiClient {
 
   // KYC Methods
   async updateKYCStatus(step: 'email' | 'phone' | 'identity', verified: boolean): Promise<void> {
-    if (USE_MOCK_API) {
-      console.log(`🎭 Using Mock API for KYC ${step} update`);
-      return mockApi.updateKYCStatus(step, verified);
-    }
-    
     await this.request(`/kyc/${step}`, {
       method: 'POST',
       body: JSON.stringify({ verified }),
@@ -638,11 +550,6 @@ class ApiClient {
   }
 
   async completeKYC(): Promise<void> {
-    if (USE_MOCK_API) {
-      console.log('🎭 Using Mock API for KYC completion');
-      return mockApi.completeKYC();
-    }
-    
     await this.request('/kyc/complete', {
       method: 'POST',
     });

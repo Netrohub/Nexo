@@ -2,11 +2,13 @@ import { Link, useLocation } from "react-router-dom";
 import { Home, Search, ShoppingCart, User, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCart } from "@/hooks/useApi";
 
 const MobileNav = () => {
   const { t } = useLanguage();
   const location = useLocation();
-  const cartItemsCount = 3; // This would come from state/context
+  const { data: cart } = useCart();
+  const cartItemsCount = cart?.items_count || 0;
 
   const navItems = [
     { path: "/", icon: Home, label: t('home') },

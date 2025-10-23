@@ -224,6 +224,56 @@ const OrderDetail = () => {
             ))}
           </div>
 
+          {/* Product Information for Completed Orders */}
+          {order.status === "completed" && (
+            <div className="mt-6 pt-6 border-t border-border/50">
+              <h3 className="text-lg font-bold text-foreground mb-4">Product Information</h3>
+              <div className="space-y-4">
+                {order.items.map((item) => (
+                  <div key={item.id} className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <h4 className="font-semibold text-foreground mb-3">{item.name}</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground/70 mb-1">Email</label>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="text" 
+                            value={`account${item.id}@example.com`}
+                            readOnly
+                            className="flex-1 px-3 py-2 rounded-lg glass-card border-border/50 bg-muted/50 text-sm"
+                          />
+                          <Button size="sm" variant="outline" className="glass-card border-border/50">
+                            Copy
+                          </Button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground/70 mb-1">Password</label>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="password" 
+                            value={`SecurePass${item.id}123!`}
+                            readOnly
+                            className="flex-1 px-3 py-2 rounded-lg glass-card border-border/50 bg-muted/50 text-sm"
+                          />
+                          <Button size="sm" variant="outline" className="glass-card border-border/50">
+                            Copy
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Important:</strong> Please change the password immediately after accessing the account. 
+                        Keep this information secure and do not share it with others.
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Order Summary */}
           <div className="mt-6 pt-6 border-t border-border/50 space-y-2">
             <div className="flex justify-between text-foreground/60">

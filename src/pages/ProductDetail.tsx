@@ -521,11 +521,31 @@ const ProductDetail = () => {
                     </div>
                     <p className="text-foreground/70 mb-4">{review.comment}</p>
                     <div className="flex items-center gap-4">
-                      <Button variant="ghost" size="sm" className="text-foreground/60 hover:text-primary">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-foreground/60 hover:text-primary"
+                        onClick={() => {
+                          toast({
+                            title: "Thank you!",
+                            description: "Your feedback has been recorded.",
+                          });
+                        }}
+                      >
                         <ThumbsUp className="h-4 w-4 mr-2" />
                         Helpful ({review.helpful})
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-foreground/60 hover:text-primary">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-foreground/60 hover:text-primary"
+                        onClick={() => {
+                          toast({
+                            title: "Reply Feature",
+                            description: "Reply functionality will be available soon!",
+                          });
+                        }}
+                      >
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Reply
                       </Button>

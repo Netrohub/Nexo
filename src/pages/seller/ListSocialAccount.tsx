@@ -152,60 +152,6 @@ const ListSocialAccount = () => {
             </div>
           </Card>
 
-          {/* Configuration Setup */}
-          <Card className="glass-card p-6">
-            <h2 className="text-xl font-bold text-foreground mb-6">{t('configurationSetup')}</h2>
-            <p className="text-sm text-foreground/60 mb-6">
-              {t('setupInstructionsDesc')}
-            </p>
-            <div className="space-y-5">
-              {/* Configuration Instructions */}
-              <div className="space-y-2">
-                <Label htmlFor="configInstructions" className="text-foreground">
-                  {t('setupInstructions')} *
-                </Label>
-                <Textarea
-                  id="configInstructions"
-                  placeholder={t('enterInstructions')}
-                  className="glass-card border-border/50 focus:border-primary/50 min-h-[120px]"
-                  required
-                />
-                <p className="text-xs text-foreground/50">
-                  {t('configInstructionsHelp')}
-                </p>
-              </div>
-
-              {/* Phone Number (Optional) */}
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-foreground">
-                  {t('phoneNumber')} ({t('ifApplicable')}) - {t('optional')}
-                </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder={t('enterPhoneNumber')}
-                  className="glass-card border-border/50 focus:border-primary/50"
-                />
-              </div>
-
-              {/* Seller Type */}
-              <div className="space-y-2">
-                <Label htmlFor="sellerType" className="text-foreground">
-                  {t('sellerType')} *
-                </Label>
-                <Select required>
-                  <SelectTrigger className="glass-card border-border/50 bg-background">
-                    <SelectValue placeholder={t('selectSellerType')} />
-                  </SelectTrigger>
-                  <SelectContent className="glass-card bg-card border-border z-50">
-                    <SelectItem value="individual">{t('individual')}</SelectItem>
-                    <SelectItem value="business">{t('business')}</SelectItem>
-                    <SelectItem value="verified">{t('verifiedSeller')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </Card>
 
           {/* Pricing Section */}
           <Card className="glass-card p-6">
