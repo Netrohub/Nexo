@@ -1,156 +1,281 @@
-# NXOLand Deployment Guide
+# 🚀 **NXOLand Complete Deployment Guide**
 
-## Project Structure
+## 📋 **Deployment Scripts Overview**
 
-The project has been split into two independent parts:
+### **1. `deploy-backend.sh`** - Backend Only
+- Deploys PHP backend to Ploi server
+- Sets up database, JWT authentication, and API endpoints
+- **Run on**: Ploi server
 
-```
-/frontend          # React + Vite frontend
-/backend           # PHP backend API
-```
+### **2. `deploy-frontend.sh`** - Frontend Only  
+- Builds React frontend for production
+- Creates optimized build in `frontend/dist/`
+- **Run on**: Local machine or build server
 
-## Frontend Deployment (nxoland.com)
+### **3. `deploy-both.sh`** - Complete Deployment
+- Deploys both backend and frontend
+- **Run on**: Local machine (uploads to servers)
 
-### 1. Build the Frontend
+---
+
+## 🔧 **Backend Deployment (Ploi Server)**
+
+### **Step 1: Upload Backend Files**
 ```bash
-cd frontend
-npm install
+# Upload all backend files to Ploi server
+# Place them in: /home/ploi/api.nxoland.com/
+```
+
+### **Step 2: Run Backend Deployment**
+```bash
+# On the Ploi server
+cd /home/ploi/api.nxoland.com
+chmod +x deploy-backend.sh
+./deploy-backend.sh
+```
+
+### **Step 3: Update Database Credentials**
+```bash
+# Edit .env file with your database credentials
+nano .env
+
+# Update these values:
+DB_USERNAME=your_actual_username
+DB_PASSWORD=your_actual_password
+```
+
+### **Step 4: Test Backend**
+```bash
+# Health check
+curl https://api.nxoland.com/api/ping
+
+# Products endpoint
+curl https://api.nxoland.com/api/products
+
+# Authentication test
+curl -X POST https://api.nxoland.com/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"user@nxoland.com","password":"password123"}'
+```
+
+---
+
+## 🌐 **Frontend Deployment (Web Server)**
+
+### **Step 1: Build Frontend**
+```bash
+# On your local machine
+chmod +x deploy-frontend.sh
+./deploy-frontend.sh
+```
+
+### **Step 2: Upload Build Files**
+```bash
+# Upload all files from frontend/dist/ to your web server
+# Make sure index.html is in the root of your web directory
+```
+
+### **Step 3: Configure Environment**
+```bash
+# Ensure your web server has the correct environment variables
+VITE_API_BASE_URL=https://api.nxoland.com
+VITE_APP_NAME=nxoland
+VITE_APP_ENV=production
+```
+
+### **Step 4: Test Frontend**
+```bash
+# Local preview
+npm run preview
+
+# Production test
+curl https://nxoland.com
+```
+
+---
+
+## 🚀 **Complete Deployment (Both)**
+
+### **Option 1: Automated Deployment**
+```bash
+# Run complete deployment script
+chmod +x deploy-both.sh
+./deploy-both.sh
+```
+
+### **Option 2: Manual Step-by-Step**
+```bash
+# 1. Deploy backend
+chmod +x deploy-backend.sh
+./deploy-backend.sh
+
+# 2. Deploy frontend  
+chmod +x deploy-frontend.sh
+./deploy-frontend.sh
+
+# 3. Upload files to servers
+# 4. Test both endpoints
+```
+
+---
+
+## 🧪 **Testing Commands**
+
+### **Backend API Tests**
+```bash
+# Health check
+curl https://api.nxoland.com/api/ping
+
+# Products list
+curl https://api.nxoland.com/api/products
+
+# User registration
+curl -X POST https://api.nxoland.com/api/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Test User","email":"test@example.com","password":"password123","password_confirmation":"password123"}'
+
+# User login
+curl -X POST https://api.nxoland.com/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"user@nxoland.com","password":"password123"}'
+```
+
+### **Frontend Tests**
+```bash
+# Local development
+npm run dev
+
+# Production preview
+npm run preview
+
+# Production build
 npm run build
 ```
 
-### 2. Upload to Hostinger
-- Upload all contents from `/frontend/dist/` to `/public_html/` on Hostinger
-- The main domain (nxoland.com) will serve the static files
+---
 
-### 3. Environment Variables
-The frontend uses these environment variables:
-- `VITE_API_BASE_URL=https://api.nxoland.com` (points to backend)
-- `VITE_COMING_SOON_MODE=false` (set to true for maintenance mode)
+## 🔧 **Environment Configuration**
 
-## Backend Deployment (api.nxoland.com)
+### **Backend (.env)**
+```env
+APP_NAME=NXOLand API
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.nxoland.com
 
-### 1. Install Dependencies
-```bash
-cd backend
-composer install
-```
-
-### 2. Configure Environment
-Update `/backend/.env` with your database credentials:
-```
-DB_HOST=your_host
-DB_DATABASE=your_database
+# Database Configuration
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=nxoland
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
-JWT_SECRET=your_secret_key
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key_change_in_production_2024
+JWT_ALGORITHM=HS256
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS=https://nxoland.com,https://www.nxoland.com
 ```
 
-### 3. Upload to Hostinger
-- Upload the entire `/backend/` folder to `/public_html/api/` on Hostinger
-- The subdomain (api.nxoland.com) will serve the PHP API
-
-### 4. Test the API
-After deployment, test the API:
-```bash
-curl https://api.nxoland.com/api/ping
-```
-Should return: `{"ok": true}`
-
-## DNS Configuration
-
-Make sure your DNS is configured:
-- `nxoland.com` → points to main hosting (frontend)
-- `api.nxoland.com` → points to same hosting with `/api/` subdirectory
-
-## Development Commands
-
-### Frontend Development
-```bash
-cd frontend
-npm run dev          # Start development server
-npm run build         # Build for production
-npm run preview       # Preview production build
+### **Frontend (.env)**
+```env
+VITE_API_BASE_URL=https://api.nxoland.com
+VITE_APP_NAME=nxoland
+VITE_APP_ENV=production
+VITE_AUTH_TOKEN_KEY=auth_token
+VITE_SESSION_TIMEOUT=60
+VITE_API_TIMEOUT=30000
 ```
 
-### Backend Development
-```bash
-cd backend
-composer install      # Install dependencies
-# Test endpoints with curl or Postman
+---
+
+## 📁 **File Structure After Deployment**
+
+### **Backend (Ploi Server)**
+```
+/home/ploi/api.nxoland.com/
+├── public/
+│   ├── index.php
+│   └── .htaccess
+├── src/
+│   ├── Controllers/
+│   ├── Models/
+│   ├── Database/
+│   └── Auth/
+├── vendor/
+├── .env
+└── composer.json
 ```
 
-## API Endpoints
+### **Frontend (Web Server)**
+```
+your-web-server/
+├── index.html
+├── assets/
+│   ├── index-[hash].js
+│   └── index-[hash].css
+└── other-static-files
+```
 
-The backend provides these endpoints:
+---
 
-### Health Check
-- `GET /api/ping` - Returns `{"ok": true}`
+## 🎯 **Deployment Checklist**
 
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `GET /api/auth/me` - Get current user
-- `POST /api/auth/logout` - User logout
+### **Backend Checklist**
+- [ ] Upload all backend files to Ploi server
+- [ ] Run `deploy-backend.sh` script
+- [ ] Update database credentials in `.env`
+- [ ] Test API endpoints
+- [ ] Verify JWT authentication works
 
-### Products
-- `GET /api/products` - List products
-- `GET /api/products/{id}` - Get product details
-- `POST /api/products` - Create product (seller)
-- `PUT /api/products/{id}` - Update product (seller)
-- `DELETE /api/products/{id}` - Delete product (seller)
+### **Frontend Checklist**
+- [ ] Run `deploy-frontend.sh` script
+- [ ] Upload `dist/` contents to web server
+- [ ] Configure environment variables
+- [ ] Test frontend locally and in production
+- [ ] Verify API connections work
 
-### Cart & Orders
-- `GET /api/cart` - Get cart items
-- `POST /api/cart` - Add to cart
-- `PUT /api/cart/{id}` - Update cart item
-- `DELETE /api/cart/{id}` - Remove from cart
-- `GET /api/orders` - List orders
-- `GET /api/orders/{id}` - Get order details
-- `POST /api/orders` - Create order
+### **Integration Checklist**
+- [ ] Backend API responds correctly
+- [ ] Frontend can connect to backend
+- [ ] Authentication flow works end-to-end
+- [ ] All features function properly
+- [ ] No console errors in production
 
-### Wishlist
-- `GET /api/wishlist` - Get wishlist
-- `POST /api/wishlist` - Add to wishlist
-- `DELETE /api/wishlist/{id}` - Remove from wishlist
+---
 
-### Disputes
-- `GET /api/disputes` - List disputes
-- `GET /api/disputes/{id}` - Get dispute details
-- `POST /api/disputes` - Create dispute
+## 🚨 **Troubleshooting**
 
-### Seller
-- `GET /api/seller/dashboard` - Seller dashboard
-- `GET /api/seller/products` - Seller products
-- `GET /api/seller/orders` - Seller orders
+### **Backend Issues**
+- **Database connection failed**: Check credentials in `.env`
+- **Composer errors**: Run `composer install` manually
+- **Permission errors**: Check file permissions with `chmod`
 
-### Admin
-- `GET /api/admin/users` - Admin users list
-- `GET /api/admin/orders` - Admin orders list
-- `GET /api/admin/disputes` - Admin disputes list
+### **Frontend Issues**
+- **Build fails**: Check Node.js version and dependencies
+- **API connection fails**: Verify `VITE_API_BASE_URL` is correct
+- **CORS errors**: Check backend CORS configuration
 
-### Members
-- `GET /api/members` - Members list
+### **Integration Issues**
+- **Authentication not working**: Verify JWT secret matches
+- **API calls failing**: Check network connectivity and URLs
+- **CORS errors**: Update backend CORS allowed origins
 
-## Troubleshooting
+---
 
-### Frontend Issues
-- Check that `VITE_API_BASE_URL` is correctly set
-- Ensure all static assets are uploaded to `/public_html/`
-- Check browser console for API connection errors
+## 🎉 **Success Indicators**
 
-### Backend Issues
-- Verify PHP version is 8.0 or higher
-- Check that Composer dependencies are installed
-- Ensure `.htaccess` is uploaded and working
-- Test with `curl https://api.nxoland.com/api/ping`
+### **Backend Success**
+- ✅ `curl https://api.nxoland.com/api/ping` returns `{"ok":true}`
+- ✅ `curl https://api.nxoland.com/api/products` returns product data
+- ✅ Authentication endpoints work with real data
 
-### CORS Issues
-- The backend includes CORS headers for cross-origin requests
-- If you encounter CORS issues, check the headers in `/backend/public/index.php`
+### **Frontend Success**
+- ✅ Frontend loads without errors
+- ✅ API calls work without CORS issues
+- ✅ Authentication flow completes successfully
+- ✅ All features function properly
 
-## Security Notes
-
-- Update JWT_SECRET in backend/.env
-- Use HTTPS for both frontend and backend
-- Configure proper database credentials
-- Set up proper file permissions on the server
+**Your NXOLand application is now fully deployed and ready for production!** 🚀
