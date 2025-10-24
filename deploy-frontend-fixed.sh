@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# NXOLand Frontend Deployment Script for Ploi
+# NXOLand Frontend Deployment Script (Fixed for Root Directory)
 set -e
 
-echo "🚀 Starting NXOLand Frontend Deployment for Ploi..."
+echo "🚀 Starting NXOLand Frontend Deployment..."
 
 # Check if we're in the right directory
 if [ ! -f "package.json" ]; then
@@ -13,6 +13,14 @@ if [ ! -f "package.json" ]; then
 fi
 
 echo "✅ Found project root directory"
+
+# Check if we're in the right frontend directory
+if [ ! -f "package.json" ]; then
+    echo "❌ Error: package.json not found!"
+    exit 1
+fi
+
+echo "✅ Found package.json"
 
 # Install dependencies
 echo "📦 Installing dependencies..."
@@ -29,21 +37,20 @@ if [ -d "dist" ]; then
     echo "📊 Build size:"
     du -sh dist/
     echo ""
-    echo "🚀 PLOI DEPLOYMENT READY:"
-    echo "1. Your build is ready in the 'dist/' directory"
-    echo "2. Ploi will automatically deploy this build"
-    echo "3. Your site will be live at https://nxoland.com"
+    echo "🚀 DEPLOYMENT READY:"
+    echo "1. Upload contents of 'dist/' to your web server"
+    echo "2. Ensure .env file is configured with correct API URL"
+    echo "3. Test the application"
     echo ""
     echo "🧪 Test commands:"
     echo "   npm run preview  # Test the build locally"
     echo "   curl https://nxoland.com  # Test production site"
     echo ""
-    echo "📁 Build files ready for Ploi:"
-    echo "   - index.html (main entry point)"
-    echo "   - assets/ (CSS, JS, images)"
-    echo "   - All static files"
+    echo "📁 Files to upload to web server:"
+    echo "   - All files from dist/"
+    echo "   - Make sure index.html is in the root of your web directory"
     echo ""
-    echo "🔧 Environment variables configured:"
+    echo "🔧 Environment variables needed:"
     echo "   VITE_API_BASE_URL=https://api.nxoland.com"
     echo "   VITE_APP_NAME=nxoland"
     echo "   VITE_APP_ENV=production"
@@ -53,4 +60,4 @@ else
 fi
 
 echo "🎉 Frontend production build completed!"
-echo "📦 Ready for Ploi deployment!"
+echo "📦 Ready for deployment to your web server"
