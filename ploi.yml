@@ -8,9 +8,8 @@ build:
 
 # Environment variables for production
 env:
-  - VITE_API_BASE_URL=https://api.nxoland.com/api
+  - VITE_API_BASE_URL=https://api.nxoland.com
   - VITE_COMING_SOON_MODE=false
-  - VITE_MOCK_API=false
   - NODE_ENV=production
 
 # Build output directory

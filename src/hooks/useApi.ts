@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, queryKeys, type Product, type ProductFilters, type Cart, type Order, type Dispute, type CreateDisputeRequest, type SellerDashboard, type User } from '@/lib/api';
+import { queryKeys, type Product, type ProductFilters, type Cart, type Order, type Dispute, type CreateDisputeRequest, type SellerDashboard, type User } from '@/lib/api';
+import { get, post, put, del } from '@/lib/request';
 import { toast } from 'sonner';
 
 // Auth Hooks
 export const useCurrentUser = () => {
   return useQuery({
     queryKey: queryKeys.currentUser(),
-    queryFn: () => apiClient.getCurrentUser(),
-    enabled: apiClient.isAuthenticated(),
+    queryFn: () => get('/api/auth/me'),
+    enabled: !!localStorage.getItem('auth_token'),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
@@ -17,7 +18,7 @@ export const useLogin = () => {
   
   return useMutation({
     mutationFn: ({ email, password, remember }: { email: string; password: string; remember?: boolean }) =>
-      apiClient.login({ email, password, remember }),
+      post('/api/auth/login', { email, password, remember }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.currentUser() });
       toast.success('Login successful!');
@@ -38,7 +39,7 @@ export const useRegister = () => {
       password: string;
       passwordConfirmation: string;
       phone?: string;
-    }) => apiClient.register({ name, email, password, password_confirmation: passwordConfirmation, phone }),
+    }) => post('/api/auth/register', { name, email, password, password_confirmation: passwordConfirmation, phone }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.currentUser() });
       toast.success('Registration successful!');
@@ -53,7 +54,7 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: () => apiClient.logout(),
+    mutationFn: () => post('/api/auth/logout'),
     onSuccess: () => {
       queryClient.clear();
       toast.success('Logged out successfully');
@@ -68,7 +69,7 @@ export const useLogout = () => {
 export const useProducts = (filters: ProductFilters = {}) => {
   return useQuery({
     queryKey: [...queryKeys.products, filters],
-    queryFn: () => apiClient.getProducts(filters),
+      queryFn: () => get('/api/products'),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -76,7 +77,7 @@ export const useProducts = (filters: ProductFilters = {}) => {
 export const useProduct = (id: number) => {
   return useQuery({
     queryKey: queryKeys.product(id),
-    queryFn: () => apiClient.getProduct(id),
+      queryFn: () => get(`/api/products/${id}`),
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -85,7 +86,7 @@ export const useProduct = (id: number) => {
 export const useFeaturedProducts = () => {
   return useQuery({
     queryKey: queryKeys.featuredProducts(),
-    queryFn: () => apiClient.getFeaturedProducts(),
+    queryFn: () => get('/api/products/featured'),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
@@ -94,7 +95,7 @@ export const useFeaturedProducts = () => {
 export const useCart = () => {
   return useQuery({
     queryKey: queryKeys.cart,
-    queryFn: () => apiClient.getCart(),
+    queryFn: () => get('/api/cart'),
     staleTime: 30 * 1000, // 30 seconds
   });
 };
@@ -104,7 +105,7 @@ export const useAddToCart = () => {
   
   return useMutation({
     mutationFn: ({ productId, quantity }: { productId: number; quantity?: number }) =>
-      apiClient.addToCart(productId, quantity),
+      post('/api/cart/add', productId, quantity),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cart });
       toast.success('Added to cart!');
@@ -120,7 +121,7 @@ export const useUpdateCartItem = () => {
   
   return useMutation({
     mutationFn: ({ itemId, quantity }: { itemId: number; quantity: number }) =>
-      apiClient.updateCartItem(itemId, quantity),
+      put('/api/cart/update', itemId, quantity),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cart });
     },
@@ -134,7 +135,7 @@ export const useRemoveFromCart = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (itemId: number) => apiClient.removeFromCart(itemId),
+    mutationFn: (itemId: number) => del('/api/cart/remove', itemId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cart });
       toast.success('Removed from cart');
@@ -149,7 +150,7 @@ export const useClearCart = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: () => apiClient.clearCart(),
+    mutationFn: () => del('/api/cart/clear'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cart });
       toast.success('Cart cleared');
@@ -164,7 +165,7 @@ export const useClearCart = () => {
 export const useOrders = (page = 1) => {
   return useQuery({
     queryKey: [...queryKeys.orders, page],
-    queryFn: () => apiClient.getOrders(page),
+    queryFn: () => get('/api/orders'),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -172,7 +173,7 @@ export const useOrders = (page = 1) => {
 export const useOrder = (id: number) => {
   return useQuery({
     queryKey: queryKeys.order(id),
-    queryFn: () => apiClient.getOrder(id),
+    queryFn: () => get(`/api/orders/${id}`),
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -183,7 +184,7 @@ export const useCreateOrder = () => {
   
   return useMutation({
     mutationFn: (data: { items: Array<{ product_id: number; quantity: number }> }) =>
-      apiClient.createOrder(data),
+      post('/api/orders', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders });
       queryClient.invalidateQueries({ queryKey: queryKeys.cart });
@@ -199,7 +200,7 @@ export const useCreateOrder = () => {
 export const useWishlist = () => {
   return useQuery({
     queryKey: queryKeys.wishlist,
-    queryFn: () => apiClient.getWishlist(),
+    queryFn: () => get('/api/wishlist'),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -208,7 +209,7 @@ export const useAddToWishlist = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (productId: number) => apiClient.addToWishlist(productId),
+    mutationFn: (productId: number) => post('/api/wishlist/add', productId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.wishlist });
       toast.success('Added to wishlist!');
@@ -223,7 +224,7 @@ export const useRemoveFromWishlist = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (productId: number) => apiClient.removeFromWishlist(productId),
+    mutationFn: (productId: number) => del('/api/wishlist/remove', productId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.wishlist });
       toast.success('Removed from wishlist');
@@ -238,7 +239,7 @@ export const useRemoveFromWishlist = () => {
 export const useDisputes = () => {
   return useQuery({
     queryKey: queryKeys.disputes,
-    queryFn: () => apiClient.getDisputes(),
+    queryFn: () => get('/api/disputes'),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -246,7 +247,7 @@ export const useDisputes = () => {
 export const useDispute = (id: number) => {
   return useQuery({
     queryKey: queryKeys.dispute(id),
-    queryFn: () => apiClient.getDispute(id),
+    queryFn: () => get(`/api/disputes/${id}`),
     enabled: !!id,
     staleTime: 1 * 60 * 1000, // 1 minute
   });
@@ -256,7 +257,7 @@ export const useCreateDispute = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: CreateDisputeRequest) => apiClient.createDispute(data),
+    mutationFn: (data: CreateDisputeRequest) => post('/api/disputes', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.disputes });
       toast.success('Dispute created successfully!');
@@ -331,7 +332,7 @@ export const useUpdateDisputeStatus = () => {
 export const useSellerDashboard = () => {
   return useQuery({
     queryKey: queryKeys.sellerDashboard(),
-    queryFn: () => apiClient.getSellerDashboard(),
+    queryFn: () => get('/api/seller/dashboard'),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -339,7 +340,7 @@ export const useSellerDashboard = () => {
 export const useSellerProducts = () => {
   return useQuery({
     queryKey: queryKeys.sellerProducts(),
-    queryFn: () => apiClient.getSellerProducts(),
+    queryFn: () => get('/api/seller/products'),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -394,7 +395,7 @@ export const useDeleteProduct = () => {
 export const useSellerOrders = () => {
   return useQuery({
     queryKey: queryKeys.sellerOrders(),
-    queryFn: () => apiClient.getSellerOrders(),
+    queryFn: () => get('/api/seller/orders'),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -449,7 +450,7 @@ export const useListSocialAccount = () => {
 export const useMembers = () => {
   return useQuery({
     queryKey: queryKeys.members,
-    queryFn: () => apiClient.getMembers(),
+    queryFn: () => get('/api/members'),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

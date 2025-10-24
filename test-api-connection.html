@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+</head>
+<body>
+    <h1>API Connection Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testApiConnection() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing API connection...</p>';
+            
+            const endpoints = [
+                '/api/ping',
+                '/api/products',
+                '/api/members',
+                '/api/orders',
+                '/api/cart'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    console.log(`🧪 Testing ${endpoint}...`);
+                    const response = await fetch(`https://api.nxoland.com${endpoint}`);
+                    
+                    const result = document.createElement('div');
+                    result.innerHTML = `
+                        <h3>${endpoint}</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Content-Type:</strong> ${response.headers.get('content-type')}</p>
+                    `;
+                    
+                    const text = await response.text();
+                    result.innerHTML += `<p><strong>Response:</strong> ${text.substring(0, 200)}</p>`;
+                    
+                    if (text.startsWith('<!doctype') || text.startsWith('<html')) {
+                        result.innerHTML += `<p style="color: red;"><strong>❌ ERROR:</strong> Returned HTML instead of JSON</p>`;
+                    } else {
+                        result.innerHTML += `<p style="color: green;"><strong>✅ SUCCESS:</strong> Returned JSON</p>`;
+                    }
+                    
+                    results.appendChild(result);
+                    
+                } catch (error) {
+                    const result = document.createElement('div');
+                    result.innerHTML = `
+                        <h3>${endpoint}</h3>
+                        <p style="color: red;"><strong>❌ ERROR:</strong> ${error.message}</p>
+                    `;
+                    results.appendChild(result);
+                }
+            }
+        }
+        
+        // Run the test when page loads
+        testApiConnection();
+    </script>
+</body>
+</html>

@@ -1,41 +1,35 @@
-import axios from 'axios';
+import { request } from './request';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://nexo.yourdomain.com';
-
-export const adminApiClient = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
+// Safe admin API client using the request helper
+export const adminApiClient = {
+  async get<T>(url: string): Promise<T> {
+    return request(`/admin${url}`, { method: 'GET' });
   },
-});
-
-// Request interceptor to add CSRF token
-adminApiClient.interceptors.request.use(async (config) => {
-  // Get CSRF token for non-GET requests
-  if (config.method !== 'get') {
-    try {
-      await axios.get(`${API_URL}/sanctum/csrf-cookie`, {
-        withCredentials: true,
-      });
-    } catch (error) {
-      console.warn('Failed to get CSRF token:', error);
-    }
+  
+  async post<T>(url: string, data?: any): Promise<T> {
+    return request(`/admin${url}`, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  },
+  
+  async put<T>(url: string, data?: any): Promise<T> {
+    return request(`/admin${url}`, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  },
+  
+  async delete<T>(url: string): Promise<T> {
+    return request(`/admin${url}`, { method: 'DELETE' });
+  },
+  
+  async patch<T>(url: string, data?: any): Promise<T> {
+    return request(`/admin${url}`, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
-  return config;
-});
-
-// Response interceptor for error handling
-adminApiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+};
 
 export default adminApiClient;

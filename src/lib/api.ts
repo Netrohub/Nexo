@@ -1,7 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
+import { request, get, post, put, del } from './request';
 
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nxoland.com/api';
+// API Configuration - now handled by safe request helper
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.nxoland.com';
 
 // Types
 export interface ApiResponse<T = any> {
@@ -223,23 +224,18 @@ export interface SellerPayout {
 
 // API Client Class
 class ApiClient {
-  private baseURL: string;
   private token: string | null = null;
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
+  constructor() {
     this.token = localStorage.getItem('auth_token');
   }
 
-  private async request<T>(
+  private async safeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
-    const url = `${this.baseURL}${endpoint}`;
-    
     const config: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
         ...(this.token && { Authorization: `Bearer ${this.token}` }),
         ...options.headers,
@@ -248,14 +244,8 @@ class ApiClient {
     };
 
     try {
-      const response = await fetch(url, config);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
-      }
-
-      return data;
+      const response = await request(endpoint, config);
+      return response;
     } catch (error) {
       console.error('API request failed:', error);
       throw error;
@@ -264,7 +254,7 @@ class ApiClient {
 
   // Auth Methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>('/auth/login', {
+    const response = await this.safeRequest<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
@@ -277,7 +267,7 @@ class ApiClient {
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>('/auth/register', {
+    const response = await this.safeRequest<AuthResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
@@ -291,26 +281,26 @@ class ApiClient {
 
   async logout(): Promise<void> {
     try {
-      await this.request('/auth/logout', { method: 'POST' });
+      await this.safeRequest('/auth/logout', { method: 'POST' });
     } finally {
       this.clearToken();
     }
   }
 
   async getCurrentUser(): Promise<User> {
-    const response = await this.request<User>('/auth/me');
+    const response = await this.safeRequest<User>('/auth/me');
     return response.data;
   }
 
   async verifyPhone(phone: string, code: string): Promise<void> {
-    await this.request('/auth/verify-phone', {
+    await this.safeRequest('/auth/verify-phone', {
       method: 'POST',
       body: JSON.stringify({ phone, code }),
     });
   }
 
   async submitKYC(data: FormData): Promise<void> {
-    await this.request('/auth/kyc', {
+    await this.safeRequest('/auth/kyc', {
       method: 'POST',
       headers: {}, // Let browser set Content-Type for FormData
       body: data,
@@ -326,51 +316,51 @@ class ApiClient {
       }
     });
     
-    const response = await this.request<PaginatedResponse<Product>>(`/products?${params}`);
+    const response = await this.safeRequest<PaginatedResponse<Product>>(`/products?${params}`);
     return response.data;
   }
 
   async getProduct(id: number): Promise<Product> {
-    const response = await this.request<Product>(`/products/${id}`);
+    const response = await this.safeRequest<Product>(`/products/${id}`);
     return response.data;
   }
 
   async getFeaturedProducts(): Promise<Product[]> {
-    const response = await this.request<Product[]>('/products?featured=true');
+    const response = await this.safeRequest<Product[]>('/products?featured=true');
     return response.data;
   }
 
   // Cart Methods
   async getCart(): Promise<Cart> {
-    const response = await this.request<Cart>('/cart');
+    const response = await this.safeRequest<Cart>('/cart');
     return response.data;
   }
 
   async addToCart(productId: number, quantity: number = 1): Promise<void> {
-    await this.request('/cart', {
+    await this.safeRequest('/cart', {
       method: 'POST',
       body: JSON.stringify({ product_id: productId, quantity }),
     });
   }
 
   async updateCartItem(itemId: number, quantity: number): Promise<void> {
-    await this.request(`/cart/${itemId}`, {
+    await this.safeRequest(`/cart/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify({ quantity }),
     });
   }
 
   async removeFromCart(itemId: number): Promise<void> {
-    await this.request(`/cart/${itemId}`, { method: 'DELETE' });
+    await this.safeRequest(`/cart/${itemId}`, { method: 'DELETE' });
   }
 
   async clearCart(): Promise<void> {
-    await this.request('/cart', { method: 'DELETE' });
+    await this.safeRequest('/cart', { method: 'DELETE' });
   }
 
   // Order Methods
   async createOrder(data: { items: Array<{ product_id: number; quantity: number }> }): Promise<Order> {
-    const response = await this.request<Order>('/orders', {
+    const response = await this.safeRequest<Order>('/orders', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -378,45 +368,45 @@ class ApiClient {
   }
 
   async getOrders(page: number = 1): Promise<PaginatedResponse<Order>> {
-    const response = await this.request<PaginatedResponse<Order>>(`/orders?page=${page}`);
+    const response = await this.safeRequest<PaginatedResponse<Order>>(`/orders?page=${page}`);
     return response.data;
   }
 
   async getOrder(id: number): Promise<Order> {
-    const response = await this.request<Order>(`/orders/${id}`);
+    const response = await this.safeRequest<Order>(`/orders/${id}`);
     return response.data;
   }
 
   // Wishlist Methods
   async getWishlist(): Promise<Product[]> {
-    const response = await this.request<Product[]>('/wishlist');
+    const response = await this.safeRequest<Product[]>('/wishlist');
     return response.data;
   }
 
   async addToWishlist(productId: number): Promise<void> {
-    await this.request('/wishlist', {
+    await this.safeRequest('/wishlist', {
       method: 'POST',
       body: JSON.stringify({ product_id: productId }),
     });
   }
 
   async removeFromWishlist(productId: number): Promise<void> {
-    await this.request(`/wishlist/${productId}`, { method: 'DELETE' });
+    await this.safeRequest(`/wishlist/${productId}`, { method: 'DELETE' });
   }
 
   // Dispute Methods
   async getDisputes(): Promise<Dispute[]> {
-    const response = await this.request<Dispute[]>('/disputes');
+    const response = await this.safeRequest<Dispute[]>('/disputes');
     return response.data;
   }
 
   async getDispute(id: number): Promise<Dispute> {
-    const response = await this.request<Dispute>(`/disputes/${id}`);
+    const response = await this.safeRequest<Dispute>(`/disputes/${id}`);
     return response.data;
   }
 
   async createDispute(data: CreateDisputeRequest): Promise<Dispute> {
-    const response = await this.request<Dispute>('/disputes', {
+    const response = await this.safeRequest<Dispute>('/disputes', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -424,7 +414,7 @@ class ApiClient {
   }
 
   async addDisputeMessage(disputeId: number, message: string): Promise<DisputeMessage> {
-    const response = await this.request<DisputeMessage>(`/disputes/${disputeId}/messages`, {
+    const response = await this.safeRequest<DisputeMessage>(`/disputes/${disputeId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ message }),
     });
@@ -432,7 +422,7 @@ class ApiClient {
   }
 
   async uploadDisputeEvidence(disputeId: number, evidence: FormData): Promise<DisputeEvidence> {
-    const response = await this.request<DisputeEvidence>(`/disputes/${disputeId}/evidence`, {
+    const response = await this.safeRequest<DisputeEvidence>(`/disputes/${disputeId}/evidence`, {
       method: 'POST',
       headers: {}, // Let browser set Content-Type for FormData
       body: evidence,
@@ -442,12 +432,12 @@ class ApiClient {
 
   // Admin Dispute Methods
   async getAdminDisputes(): Promise<Dispute[]> {
-    const response = await this.request<Dispute[]>('/admin/disputes');
+    const response = await this.safeRequest<Dispute[]>('/admin/disputes');
     return response.data;
   }
 
   async updateDisputeStatus(disputeId: number, status: string, resolution?: string): Promise<Dispute> {
-    const response = await this.request<Dispute>(`/admin/disputes/${disputeId}`, {
+    const response = await this.safeRequest<Dispute>(`/admin/disputes/${disputeId}`, {
       method: 'PUT',
       body: JSON.stringify({ status, resolution }),
     });
@@ -456,17 +446,17 @@ class ApiClient {
 
   // Seller Methods
   async getSellerDashboard(): Promise<SellerDashboard> {
-    const response = await this.request<SellerDashboard>('/seller/dashboard-metrics');
+    const response = await this.safeRequest<SellerDashboard>('/seller/dashboard-metrics');
     return response.data;
   }
 
   async getSellerProducts(): Promise<Product[]> {
-    const response = await this.request<Product[]>('/seller/products');
+    const response = await this.safeRequest<Product[]>('/seller/products');
     return response.data;
   }
 
   async createProduct(data: FormData): Promise<Product> {
-    const response = await this.request<Product>('/seller/products', {
+    const response = await this.safeRequest<Product>('/seller/products', {
       method: 'POST',
       headers: {}, // Let browser set Content-Type for FormData
       body: data,
@@ -475,7 +465,7 @@ class ApiClient {
   }
 
   async updateProduct(id: number, data: FormData): Promise<Product> {
-    const response = await this.request<Product>(`/seller/products/${id}`, {
+    const response = await this.safeRequest<Product>(`/seller/products/${id}`, {
       method: 'PUT',
       headers: {}, // Let browser set Content-Type for FormData
       body: data,
@@ -484,26 +474,26 @@ class ApiClient {
   }
 
   async deleteProduct(id: number): Promise<void> {
-    await this.request(`/seller/products/${id}`, { method: 'DELETE' });
+    await this.safeRequest(`/seller/products/${id}`, { method: 'DELETE' });
   }
 
   async getSellerOrders(): Promise<SellerOrder[]> {
-    const response = await this.request<SellerOrder[]>('/seller/orders');
+    const response = await this.safeRequest<SellerOrder[]>('/seller/orders');
     return response.data;
   }
 
   async getSellerPayouts(): Promise<SellerPayout[]> {
-    const response = await this.request<SellerPayout[]>('/seller/payouts');
+    const response = await this.safeRequest<SellerPayout[]>('/seller/payouts');
     return response.data;
   }
 
   async getSellerNotifications(): Promise<any[]> {
-    const response = await this.request<any[]>('/seller/notifications');
+    const response = await this.safeRequest<any[]>('/seller/notifications');
     return response.data;
   }
 
   async listGamingAccount(data: FormData): Promise<Product> {
-    const response = await this.request<Product>('/seller/listing/gaming-account', {
+    const response = await this.safeRequest<Product>('/seller/listing/gaming-account', {
       method: 'POST',
       headers: {}, // Let browser set Content-Type for FormData
       body: data,
@@ -512,7 +502,7 @@ class ApiClient {
   }
 
   async listSocialAccount(data: FormData): Promise<Product> {
-    const response = await this.request<Product>('/seller/listing/social-account', {
+    const response = await this.safeRequest<Product>('/seller/listing/social-account', {
       method: 'POST',
       headers: {}, // Let browser set Content-Type for FormData
       body: data,
@@ -522,7 +512,7 @@ class ApiClient {
 
   // Members
   async getMembers(): Promise<User[]> {
-    const response = await this.request<User[]>('/members');
+    const response = await this.safeRequest<User[]>('/members');
     return response.data;
   }
 
@@ -543,21 +533,21 @@ class ApiClient {
 
   // KYC Methods
   async updateKYCStatus(step: 'email' | 'phone' | 'identity', verified: boolean): Promise<void> {
-    await this.request(`/kyc/${step}`, {
+    await this.safeRequest(`/kyc/${step}`, {
       method: 'POST',
       body: JSON.stringify({ verified }),
     });
   }
 
   async completeKYC(): Promise<void> {
-    await this.request('/kyc/complete', {
+    await this.safeRequest('/kyc/complete', {
       method: 'POST',
     });
   }
 }
 
 // Create and export API client instance
-export const apiClient = new ApiClient(API_BASE_URL);
+export const apiClient = new ApiClient();
 
 // React Query keys for consistent caching
 export const queryKeys = {

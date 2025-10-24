@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, apiClient } from '@/lib/api';
+import { User } from '@/lib/api';
+import { request, get, post } from '@/lib/request';
 
 interface AuthContextType {
   user: User | null;
@@ -34,19 +35,20 @@ function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (apiClient.isAuthenticated()) {
-          const userData = await apiClient.getCurrentUser();
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        apiClient.clearToken();
-      } finally {
-        setIsLoading(false);
+  const initAuth = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        const userData = await get('/api/auth/me');
+        setUser(userData);
       }
-    };
+    } catch (error) {
+      console.error('Failed to initialize auth:', error);
+      localStorage.removeItem('auth_token');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
     initAuth();
   }, []);
@@ -56,7 +58,7 @@ function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       console.log('🔑 AuthContext: Logging in...', { email });
       
-      const response = await apiClient.login({ email, password, remember });
+      const response = await post('/api/auth/login', { email, password, remember });
       
       console.log('👤 AuthContext: Setting user', response.user);
       setUser(response.user);
@@ -79,7 +81,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   ) => {
     try {
       setIsLoading(true);
-      const response = await apiClient.register({
+      const response = await post('/api/auth/register', {
         name,
         email,
         password,
@@ -97,25 +99,26 @@ function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      await apiClient.logout();
+      await post('/api/auth/logout');
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
       setUser(null);
-      apiClient.clearToken();
+      localStorage.removeItem('auth_token');
     }
   };
 
   const refreshUser = async () => {
     try {
-      if (apiClient.isAuthenticated()) {
-        const userData = await apiClient.getCurrentUser();
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        const userData = await get('/api/auth/me');
         setUser(userData);
       }
     } catch (error) {
       console.error('Failed to refresh user:', error);
       setUser(null);
-      apiClient.clearToken();
+      localStorage.removeItem('auth_token');
     }
   };
 
@@ -143,7 +146,7 @@ function AuthProvider({ children }: AuthProviderProps) {
       });
 
       // Send update to backend
-      await apiClient.updateKYCStatus(step, verified);
+      await post('/api/auth/kyc/update', { step, verified });
       
       console.log(`✅ AuthContext: KYC ${step} status updated successfully`);
     } catch (error) {
@@ -169,7 +172,7 @@ function AuthProvider({ children }: AuthProviderProps) {
       });
 
       // Send completion to backend
-      await apiClient.completeKYC();
+      await post('/api/auth/kyc/complete');
       
       console.log('✅ AuthContext: KYC verification completed successfully');
     } catch (error) {
