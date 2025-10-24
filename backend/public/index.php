@@ -15,10 +15,25 @@ try {
     error_log('Warning: Could not load .env file: ' . $e->getMessage());
 }
 
-// CORS headers
-header('Access-Control-Allow-Origin: *');
+// CORS headers - Restrict to specific domains
+$allowedOrigins = [
+    'https://nxoland.com',
+    'https://www.nxoland.com',
+    'http://localhost:3000',
+    'http://localhost:4173',
+    'http://localhost:4174'
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowedOrigins)) {
+    header("Access-Control-Allow-Origin: {$origin}");
+} else {
+    header('Access-Control-Allow-Origin: https://nxoland.com');
+}
+
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json');
 
 // Handle preflight requests
@@ -115,7 +130,7 @@ switch ($routeInfo[0]) {
         } else {
             // Handle controller@method format
             list($controller, $method) = explode('@', $handler);
-            $controllerClass = "\\NXOLand\\Controllers\\{$controller}";
+            $controllerClass = "\\App\\Controllers\\{$controller}";
             
             if (class_exists($controllerClass)) {
                 $controllerInstance = new $controllerClass();

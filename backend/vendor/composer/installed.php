@@ -3,13 +3,22 @@
         'name' => 'nxoland/backend',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '29a998ced3b9e2264393e6862f823dcbd793bb66',
+        'reference' => '7da7d98ea11c2581c225a8b1dbf6b641fe81c1a7',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
+        'firebase/php-jwt' => array(
+            'pretty_version' => 'v6.11.1',
+            'version' => '6.11.1.0',
+            'reference' => 'd1e91ecf8c598d073d0995afa8cd5c75c6e19e66',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../firebase/php-jwt',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'graham-campbell/result-type' => array(
             'pretty_version' => 'v1.1.3',
             'version' => '1.1.3.0',
@@ -31,7 +40,7 @@
         'nxoland/backend' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '29a998ced3b9e2264393e6862f823dcbd793bb66',
+            'reference' => '7da7d98ea11c2581c225a8b1dbf6b641fe81c1a7',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

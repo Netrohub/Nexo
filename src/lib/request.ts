@@ -4,31 +4,43 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://api.nxoland.com'
 export async function request(path: string, options?: RequestInit) {
   const url = `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
   
-  console.log('🌐 Making API request to:', url);
+  // Only log in development
+  if (import.meta.env.DEV) {
+    console.log('🌐 Making API request to:', url);
+  }
   
   const res = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
   
-  console.log('📡 API response status:', res.status);
-  console.log('📡 API response headers:', Object.fromEntries(res.headers.entries()));
+  // Only log in development
+  if (import.meta.env.DEV) {
+    console.log('📡 API response status:', res.status);
+    console.log('📡 API response headers:', Object.fromEntries(res.headers.entries()));
+  }
   
   if (!res.ok) {
     // surface clearer errors in React Query devtools/console
     const text = await res.text().catch(() => '');
-    console.error('❌ API request failed:', text);
+    if (import.meta.env.DEV) {
+      console.error('❌ API request failed:', text);
+    }
     throw new Error(`HTTP ${res.status} on ${url}: ${text || res.statusText}`);
   }
   
   const contentType = res.headers.get('content-type');
-  console.log('📄 Content-Type:', contentType);
+  if (import.meta.env.DEV) {
+    console.log('📄 Content-Type:', contentType);
+  }
   
   if (contentType?.includes('application/json')) {
     return res.json();
   } else {
     const text = await res.text();
-    console.log('📄 Non-JSON response:', text.substring(0, 100));
+    if (import.meta.env.DEV) {
+      console.log('📄 Non-JSON response:', text.substring(0, 100));
+    }
     throw new Error(`Expected JSON but got ${contentType}: ${text.substring(0, 100)}`);
   }
 }
