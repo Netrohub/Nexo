@@ -27,12 +27,24 @@ This project has been split into two independent parts for better deployment and
 ## Deployment
 
 ### Frontend (nxoland.com)
-1. Run `npm run build` in the `/frontend` directory
-2. Upload contents of `/frontend/dist/` to `/public_html/` on Hostinger
+1. Run `npm run build` in the `/nxoland-frontend` directory
+2. Upload contents of `/nxoland-frontend/dist/` to `/public_html/` on Hostinger
 
 ### Backend (api.nxoland.com)
-1. Run `composer install` in the `/backend` directory
-2. Upload entire `/backend/` folder to `/public_html/api/` on Hostinger
+
+**Quick Deploy (Recommended):**
+```bash
+cd /home/ploi/api.nxoland.com
+./deploy-backend.sh
+```
+
+**Manual Deploy:**
+1. Run `npm install` in the `/nxoland-backend` directory
+2. Run `npx prisma generate` to generate Prisma client
+3. Run `npx prisma db push` to push schema changes
+4. Run `npm run build` to build the application
+5. Run `npm ci --omit=dev` to install production dependencies
+6. Restart PM2: `pm2 restart nxoland-backend`
 
 ## Development
 
