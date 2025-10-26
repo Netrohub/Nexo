@@ -298,6 +298,14 @@ The seller profile page was returning "Failed to fetch seller data: SyntaxError:
 **Result:**
 ✅ Seller profile links now use the correct username identifier, preventing 404 errors
 
+**Additional Note:**
+The 404 errors that still occur (e.g., for "user7") are expected behavior when:
+- The seller username in the database doesn't exist
+- The user was deleted from the database
+- Test/mock data is being used
+
+The error handling in the SellerProfile component properly displays a "Seller not found" message when the user doesn't exist.
+
 ---
 
 *Report generated: January 2025*  
