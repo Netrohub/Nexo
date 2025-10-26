@@ -41,14 +41,32 @@ echo ""
 # Step 5: Build the application
 echo "🏗️ Building the application..."
 npm run build
-echo "✅ Application built"
+BUILD_EXIT_CODE=$?
+echo "Build command exit code: $BUILD_EXIT_CODE"
+
+if [ $BUILD_EXIT_CODE -eq 0 ] && [ -d "dist" ]; then
+    echo "✅ Application built successfully"
+else
+    echo "❌ Build failed or dist directory not created"
+    echo "Build exit code: $BUILD_EXIT_CODE"
+    echo "dist directory exists: $([ -d "dist" ] && echo "yes" || echo "no")"
+    exit 1
+fi
 echo ""
 
 # Step 6: Verify build file exists
+echo "🔍 Checking for build files..."
+ls -la dist/ || echo "⚠️ dist directory not found"
+echo ""
+
 if [ -f "dist/main.js" ]; then
     echo "✅ Build file exists: dist/main.js"
+    echo "📊 File size: $(du -h dist/main.js | cut -f1)"
 else
     echo "❌ Build file not found: dist/main.js"
+    echo ""
+    echo "Listing dist directory contents:"
+    ls -la dist/ || echo "⚠️ dist directory does not exist"
     exit 1
 fi
 echo ""
