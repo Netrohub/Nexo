@@ -40,7 +40,7 @@ echo ""
 
 # Step 5: Build the application
 echo "🏗️ Building the application..."
-npm run build
+npm run build 2>&1
 BUILD_EXIT_CODE=$?
 echo "Build command exit code: $BUILD_EXIT_CODE"
 
